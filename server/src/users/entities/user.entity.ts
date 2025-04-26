@@ -16,6 +16,9 @@ export class User {
 
   @Prop()
   color: string;
+
+  @Prop({ default: null })
+  refreshToken: string;
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);
