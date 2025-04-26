@@ -7,11 +7,12 @@ import {
 import { InjectModel } from '@nestjs/mongoose';
 import * as argon2 from 'argon2';
 import { Model } from 'mongoose';
+
 import { PROFILE_COLOR } from 'src/common/constants';
 
+import { User } from './entities/user.entity';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { User } from './entities/user.entity';
 
 @Injectable()
 export class UsersService {
@@ -20,9 +21,7 @@ export class UsersService {
   async create(createUserDto: CreateUserDto) {
     const { email, password, name } = createUserDto;
 
-    const existingUser = await this.userModel.findOne({
-      email,
-    });
+    const existingUser = await this.userModel.findOne({ email });
 
     if (existingUser) {
       throw new HttpException('Email already exists.', HttpStatus.CONFLICT);
