@@ -6,6 +6,7 @@ import { CreateUserDto } from 'src/users/dto/create-user.dto';
 
 import { AuthService } from './auth.service';
 import { SignInDto } from './dto/sign-in.dto';
+import { RefreshTokenDto } from './dto/refresh-token.dto';
 
 @ApiTags('auth')
 @Controller('auth')
@@ -50,5 +51,11 @@ export class AuthController {
     });
 
     return { message: 'Logout successful' };
+  }
+
+  @Post('refresh-token')
+  @HttpCode(200)
+  refreshToken(@Body() body: RefreshTokenDto) {
+    return this.authService.refreshTokens(body.refreshToken);
   }
 }

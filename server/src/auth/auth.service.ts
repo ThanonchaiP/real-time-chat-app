@@ -1,4 +1,8 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import {
+  ForbiddenException,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { InjectModel } from '@nestjs/mongoose';
 import * as argon2 from 'argon2';
@@ -9,6 +13,13 @@ import { User } from 'src/users/entities/user.entity';
 import { UsersService } from 'src/users/users.service';
 
 import { SignInDto } from './dto/sign-in.dto';
+
+interface TokenPayload {
+  sub: string; // user id
+  email: string;
+  iat?: number; // issued at
+  exp?: number; // expired at
+}
 
 @Injectable()
 export class AuthService {
@@ -38,12 +49,32 @@ export class AuthService {
     const tokens = await this.getTokens(user);
     await this.updateRefreshToken(user._id.toString(), tokens.refreshToken);
 
-    return { data: { user: user.id, ...tokens } };
+    return { data: { user: user._id, ...tokens } };
   }
 
   async logout(userId: string) {
     await this.usersService.update(userId, { refreshToken: undefined });
-    return { message: 'Logout successful' };
+  }
+
+  async refreshTokens(refreshToken: string) {
+    try {
+      const payload = await this.jwtService.verifyAsync<TokenPayload>(
+        refreshToken,
+        { secret: process.env.JWT_SECRET },
+      );
+
+      const user = await this.usersService.findOne(payload.sub);
+      if (!user || !user.refreshToken) {
+        throw new ForbiddenException('Access Denied');
+      }
+
+      const tokens = await this.getTokens(user);
+      await this.updateRefreshToken(user._id.toString(), tokens.refreshToken);
+
+      return { data: { user: user._id, ...tokens } };
+    } catch {
+      throw new UnauthorizedException('Invalid refresh token');
+    }
   }
 
   hashData(data: string) {
@@ -60,14 +91,14 @@ export class AuthService {
   async getTokens(user: User & { _id: Types.ObjectId }) {
     const [accessToken, refreshToken] = await Promise.all([
       this.jwtService.signAsync(
-        { id: user._id, email: user.email },
+        { sub: user._id, email: user.email },
         {
           secret: process.env.JWT_SECRET,
           expiresIn: '1h',
         },
       ),
       this.jwtService.signAsync(
-        { id: user._id, email: user.email },
+        { sub: user._id, email: user.email },
         {
           secret: process.env.JWT_SECRET,
           expiresIn: '1d',
