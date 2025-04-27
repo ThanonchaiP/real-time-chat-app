@@ -11,15 +11,9 @@ import { Model, Types } from 'mongoose';
 import { CreateUserDto } from 'src/users/dto/create-user.dto';
 import { User } from 'src/users/entities/user.entity';
 import { UsersService } from 'src/users/users.service';
+import { TokenPayload } from 'src/types';
 
 import { SignInDto } from './dto/sign-in.dto';
-
-interface TokenPayload {
-  sub: string; // user id
-  email: string;
-  iat?: number; // issued at
-  exp?: number; // expired at
-}
 
 @Injectable()
 export class AuthService {

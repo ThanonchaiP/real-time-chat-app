@@ -1,12 +1,21 @@
-import { Controller, Post, Body, Res, HttpCode, Param } from '@nestjs/common';
-import { ApiTags } from '@nestjs/swagger';
+import {
+  Controller,
+  Post,
+  Body,
+  Res,
+  HttpCode,
+  Param,
+  UseGuards,
+  Headers,
+} from '@nestjs/common';
+import { AuthGuard } from '@nestjs/passport';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { Response } from 'express';
 
 import { CreateUserDto } from 'src/users/dto/create-user.dto';
 
 import { AuthService } from './auth.service';
 import { SignInDto } from './dto/sign-in.dto';
-import { RefreshTokenDto } from './dto/refresh-token.dto';
 
 @ApiTags('auth')
 @Controller('auth')
@@ -53,9 +62,17 @@ export class AuthController {
     return { message: 'Logout successful' };
   }
 
+  @UseGuards(AuthGuard('jwt-refresh'))
+  @ApiBearerAuth('access-token')
   @Post('refresh-token')
   @HttpCode(200)
-  refreshToken(@Body() body: RefreshTokenDto) {
-    return this.authService.refreshTokens(body.refreshToken);
+  refreshToken(@Headers('authorization') authorization: string) {
+    const refreshToken = authorization?.split(' ')[1]; // ตัด Bearer ออก
+
+    if (!refreshToken) {
+      throw new Error('Refresh token is missing');
+    }
+
+    return this.authService.refreshTokens(refreshToken);
   }
 }
