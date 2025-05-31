@@ -35,7 +35,7 @@ export default function LoginPage() {
   const router = useRouter();
 
   const [showPassword, setShowPassword] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading] = useState(false);
 
   const {
     register,
@@ -209,7 +209,7 @@ export default function LoginPage() {
 
             <div className="text-center">
               <span className="text-sm text-slate-600">
-                Don't have an account?{" "}
+                Don&apos;t have an account?{" "}
                 <Button
                   variant="link"
                   className="px-0 text-sm text-blue-600 hover:text-blue-800 font-medium"
