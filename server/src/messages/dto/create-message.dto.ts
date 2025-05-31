@@ -26,11 +26,4 @@ export class CreateMessageDto {
     size?: number;
     mimeType?: string;
   }>;
-
-  @ApiProperty({ description: 'Reply to another message', required: false })
-  replyTo?: {
-    messageId: string;
-    content: string;
-    senderId: string;
-  };
 }

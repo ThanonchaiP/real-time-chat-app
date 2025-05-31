@@ -1,7 +1,8 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Schema as MongooseSchema } from 'mongoose';
-import { Room } from 'src/rooms/entities/room.entity';
-import { User } from 'src/users/entities/user.entity';
+
+import { Room } from '@/rooms/entities/room.entity';
+import { User } from '@/users/entities/user.entity';
 
 export type MessageDocument = Message & Document;
 
@@ -24,18 +25,6 @@ export class Attachment {
 
   @Prop()
   mimeType?: string;
-}
-
-@Schema()
-export class ReplyTo {
-  @Prop({ type: MongooseSchema.Types.ObjectId })
-  messageId: MongooseSchema.Types.ObjectId;
-
-  @Prop()
-  content: string;
-
-  @Prop({ type: MongooseSchema.Types.ObjectId, ref: 'User' })
-  senderId: MongooseSchema.Types.ObjectId;
 }
 
 @Schema()
@@ -80,9 +69,6 @@ export class Message {
 
   @Prop({ enum: ['text', 'rich_text', 'markdown'], default: 'text' })
   contentType: string;
-
-  @Prop({ type: ReplyTo })
-  replyTo?: ReplyTo;
 
   @Prop({ type: [Attachment] })
   attachments?: Attachment[];
