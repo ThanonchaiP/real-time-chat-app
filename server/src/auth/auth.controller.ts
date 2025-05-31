@@ -39,7 +39,8 @@ export class AuthController {
       httpOnly: true, // ป้องกัน XSS โจมตี
       secure: process.env.NODE_ENV === 'production', // ใช้ HTTPS เท่านั้นถ้า prod
       sameSite: 'strict', // ปลอดภัยเพิ่ม
-      maxAge: 1000 * 60 * 60, // 1 ชั่วโมง
+      maxAge: 1000 * 60 * 60 * 24, // 1 วัน
+      // maxAge: 1000 * 60 * 60, // 1 ชั่วโมง
     });
 
     return data;
