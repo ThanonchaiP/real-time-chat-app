@@ -1,9 +1,9 @@
-export default function Home() {
+"use client";
+
+export default function HomePage() {
   return (
-    <div>
-      Lorem ipsum dolor sit amet, consectetur adipisicing elit. Molestiae libero
-      veritatis dolores veniam, repellat amet sapiente cumque assumenda, facere
-      incidunt a quisquam dignissimos vero. Illum alias harum aut sint sapiente.
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center p-4">
+      HomePage
     </div>
   );
 }
