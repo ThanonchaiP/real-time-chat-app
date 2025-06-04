@@ -35,13 +35,7 @@ export class AuthController {
   ) {
     const { data } = await this.authService.signIn(body);
 
-    res.cookie('token', data.accessToken, {
-      httpOnly: true, // ป้องกัน XSS โจมตี
-      secure: process.env.NODE_ENV === 'production', // ใช้ HTTPS เท่านั้นถ้า prod
-      sameSite: 'strict', // ปลอดภัยเพิ่ม
-      maxAge: 1000 * 60 * 60 * 24, // 1 วัน
-      // maxAge: 1000 * 60 * 60, // 1 ชั่วโมง
-    });
+    this.setAuthCookies(res, data.accessToken, data.refreshToken);
 
     return data;
   }
@@ -75,5 +69,29 @@ export class AuthController {
     }
 
     return this.authService.refreshTokens(refreshToken);
+  }
+
+  private setAuthCookies(
+    res: Response,
+    accessToken: string,
+    refreshToken: string,
+  ) {
+    const isProd = process.env.NODE_ENV === 'production';
+
+    const baseCookieOptions = {
+      httpOnly: true,
+      secure: isProd,
+      sameSite: 'strict' as const,
+    };
+
+    res.cookie('access_token', accessToken, {
+      ...baseCookieOptions,
+      maxAge: 1000 * 60 * 60 * 24, // 1 วัน
+    });
+
+    res.cookie('refresh_token', refreshToken, {
+      ...baseCookieOptions,
+      maxAge: 1000 * 60 * 60 * 24 * 7, // 7 วัน
+    });
   }
 }
