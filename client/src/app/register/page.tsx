@@ -2,8 +2,6 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
-import React, { useState } from "react";
-import { useForm } from "react-hook-form";
 import {
   Eye,
   EyeOff,
@@ -13,6 +11,9 @@ import {
   AlertCircle,
   UserPlus,
 } from "lucide-react";
+import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { toast } from "sonner";
 import * as z from "zod";
 
 // shadcn/ui components
@@ -26,13 +27,14 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { useRegister } from "@/features/auth";
 
 // Zod validation schema
 const registerSchema = z
   .object({
     name: z
       .string()
-      .min(2, "First name must be at least 2 characters")
+      .min(3, "First name must be at least 3 characters")
       .max(50, "First name must be less than 50 characters"),
     email: z
       .string()
@@ -51,9 +53,15 @@ type RegisterFormData = z.infer<typeof registerSchema>;
 export default function RegisterPage() {
   const router = useRouter();
 
+  const { mutate, isPending } = useRegister({
+    onSuccess: () => {
+      toast.success("Account created successfully!");
+      router.push("/login");
+    },
+  });
+
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
 
   const {
     register,
@@ -68,20 +76,7 @@ export default function RegisterPage() {
   const password = watch("password");
 
   const onSubmit = async (data: RegisterFormData) => {
-    setIsLoading(true);
-
-    try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 2000));
-
-      console.log("Registration data:", data);
-      alert(`Registration successful! Welcome, ${data.name}!`);
-    } catch (error) {
-      console.error("Registration failed:", error);
-      alert("Registration failed. Please try again.");
-    } finally {
-      setIsLoading(false);
-    }
+    mutate(data);
   };
 
   const getPasswordStrength = () => {
@@ -306,9 +301,9 @@ export default function RegisterPage() {
               <Button
                 onClick={handleSubmit(onSubmit)}
                 className="w-full h-11 bg-gradient-to-r mt-4 from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700 text-white font-medium transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-                disabled={isLoading || !isValid || isSubmitting}
+                disabled={isPending || !isValid || isSubmitting}
               >
-                {isLoading ? (
+                {isPending ? (
                   <div className="flex items-center space-x-2">
                     <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
                     <span>Creating account...</span>
