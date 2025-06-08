@@ -6,6 +6,7 @@ import { Eye, EyeOff, Mail, Lock, AlertCircle } from "lucide-react";
 import { useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
+import { toast } from "sonner";
 import { z } from "zod";
 
 // shadcn/ui components
@@ -20,11 +21,12 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
+import { useSignin } from "@/features/auth";
 
 // ✅ Zod Schema
 const loginSchema = z.object({
   email: z.string().email("Please enter a valid email address"),
-  password: z.string().min(6, "Password must be at least 6 characters"),
+  password: z.string(),
   rememberMe: z.boolean().optional(),
 });
 
@@ -33,9 +35,14 @@ type LoginFormData = z.infer<typeof loginSchema>;
 
 export default function LoginPage() {
   const router = useRouter();
+  const { mutate: signin, isPending } = useSignin({
+    onSuccess: () => {
+      toast.success("Sign in successful!");
+      router.push("/");
+    },
+  });
 
   const [showPassword, setShowPassword] = useState(false);
-  const [isLoading] = useState(false);
 
   const {
     register,
@@ -70,11 +77,7 @@ export default function LoginPage() {
       Cookies.remove("email");
     }
 
-    console.log("submitted:", data);
-  };
-
-  const handleSubmitError = (formErrors: typeof errors) => {
-    console.log("Form errors:", formErrors);
+    signin(data);
   };
 
   return (
@@ -94,10 +97,7 @@ export default function LoginPage() {
           </CardHeader>
 
           <CardContent className="space-y-6">
-            <form
-              onSubmit={handleSubmit(onSubmit, handleSubmitError)}
-              className="space-y-4"
-            >
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
               {/* Email */}
               <div className="space-y-2">
                 <Label
@@ -194,9 +194,9 @@ export default function LoginPage() {
               <Button
                 type="submit"
                 className="w-full h-11 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-medium transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-                disabled={isLoading || !isValid}
+                disabled={isPending || !isValid}
               >
-                {isLoading ? (
+                {isPending ? (
                   <div className="flex items-center space-x-2">
                     <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
                     <span>Signing in...</span>
