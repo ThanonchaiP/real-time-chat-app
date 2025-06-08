@@ -4,16 +4,18 @@ import type { NextRequest } from "next/server";
 export function middleware(req: NextRequest) {
   const token = req.cookies.get("access_token")?.value;
 
+  // ถ้ามี token และกำลังเข้าถึงหน้า login หรือ register, redirect ไปหน้า home
+  if (
+    token &&
+    (req.nextUrl.pathname.startsWith("/login") ||
+      req.nextUrl.pathname.startsWith("/register"))
+  ) {
+    return NextResponse.redirect(new URL("/", req.url));
+  }
+
   // ถ้าไม่มี token, redirect ไป login
   if (!token) {
     return NextResponse.redirect(new URL("/login", req.url));
-  }
-
-  if (
-    req.nextUrl.pathname.startsWith("/login") ||
-    req.nextUrl.pathname.startsWith("/register")
-  ) {
-    return NextResponse.redirect(new URL("/", req.url));
   }
 
   // ถ้ามี token ให้ผ่านได้
