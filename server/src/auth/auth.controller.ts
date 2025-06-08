@@ -7,12 +7,15 @@ import {
   Param,
   UseGuards,
   Headers,
+  Get,
+  Req,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
-import { Response } from 'express';
+import { Request, Response } from 'express';
 
-import { CreateUserDto } from 'src/users/dto/create-user.dto';
+import { JwtCookieAuthGuard } from '@/common/guards/jwt-cookie.guard';
+import { CreateUserDto } from '@/users/dto/create-user.dto';
 
 import { AuthService } from './auth.service';
 import { SignInDto } from './dto/sign-in.dto';
@@ -62,13 +65,13 @@ export class AuthController {
   @Post('refresh-token')
   @HttpCode(200)
   refreshToken(@Headers('authorization') authorization: string) {
-    const refreshToken = authorization?.split(' ')[1]; // ตัด Bearer ออก
+    const accessToken = authorization?.split(' ')[1]; // ตัด Bearer ออก
 
-    if (!refreshToken) {
-      throw new Error('Refresh token is missing');
+    if (!accessToken) {
+      throw new Error('Access token is missing');
     }
 
-    return this.authService.refreshTokens(refreshToken);
+    return this.authService.refreshTokens(accessToken);
   }
 
   private setAuthCookies(
@@ -93,5 +96,12 @@ export class AuthController {
       ...baseCookieOptions,
       maxAge: 1000 * 60 * 60 * 24 * 7, // 7 วัน
     });
+  }
+
+  @UseGuards(JwtCookieAuthGuard)
+  @Get('me')
+  getMe(@Req() req: Request) {
+    const token = req.cookies['access_token'];
+    return this.authService.getMe(token);
   }
 }

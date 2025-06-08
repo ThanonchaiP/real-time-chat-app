@@ -1,6 +1,7 @@
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import * as cookieParser from 'cookie-parser';
 import helmet from 'helmet';
 
 import { AppModule } from './app.module';
@@ -13,6 +14,7 @@ async function bootstrap() {
     credentials: true, // ✅ ต้องเปิดเพื่อรับ cookie
   });
   app.use(helmet());
+  app.use(cookieParser());
   app.setGlobalPrefix('api');
   app.useGlobalPipes(new ValidationPipe({ transform: true }));
   app.useGlobalInterceptors(new TransformInterceptor());

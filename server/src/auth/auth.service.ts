@@ -50,10 +50,10 @@ export class AuthService {
     await this.usersService.update(userId, { refreshToken: undefined });
   }
 
-  async refreshTokens(refreshToken: string) {
+  async refreshTokens(accessToken: string) {
     try {
       const payload = await this.jwtService.verifyAsync<TokenPayload>(
-        refreshToken,
+        accessToken,
         { secret: process.env.JWT_SECRET },
       );
 
@@ -68,6 +68,24 @@ export class AuthService {
       return { data: { user: user._id, ...tokens } };
     } catch {
       throw new UnauthorizedException('Invalid refresh token');
+    }
+  }
+
+  async getMe(accessToken: string) {
+    try {
+      const payload = await this.jwtService.verifyAsync<TokenPayload>(
+        accessToken,
+        { secret: process.env.JWT_SECRET },
+      );
+
+      const user = await this.usersService.findOne(payload.sub);
+      if (!user) {
+        throw new UnauthorizedException('User not found');
+      }
+
+      return user;
+    } catch (error) {
+      throw new UnauthorizedException('Invalid access token');
     }
   }
 
@@ -88,7 +106,8 @@ export class AuthService {
         { sub: user._id, email: user.email },
         {
           secret: process.env.JWT_SECRET,
-          expiresIn: '1h',
+          // expiresIn: '1h',
+          expiresIn: '1m',
         },
       ),
       this.jwtService.signAsync(
