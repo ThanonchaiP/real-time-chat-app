@@ -12,6 +12,7 @@ import {
 import { ApiTags } from '@nestjs/swagger';
 import { Request, Response } from 'express';
 
+import { clearAuthCookies, setAuthCookies } from '@/auth/helper';
 import { JwtCookieAuthGuard } from '@/common/guards/jwt-cookie.guard';
 import { JwtRefreshGuard } from '@/common/guards/jwt-refresh.guard';
 import { CreateUserDto } from '@/users/dto/create-user.dto';
@@ -37,7 +38,7 @@ export class AuthController {
   ) {
     const { data } = await this.authService.signIn(body);
 
-    this.setAuthCookies(res, data.accessToken, data.refreshToken);
+    setAuthCookies(res, data.accessToken, data.refreshToken);
 
     return data;
   }
@@ -49,12 +50,7 @@ export class AuthController {
     @Res({ passthrough: true }) res: Response,
   ) {
     await this.authService.logout(id);
-
-    res.clearCookie('token', {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
-    });
+    clearAuthCookies(res);
 
     return { message: 'Logout successful' };
   }
@@ -71,34 +67,10 @@ export class AuthController {
       throw new Error('Refresh token is missing');
     }
 
-    const { data } = await this.authService.refreshTokens(refreshToken);
-    this.setAuthCookies(res, data.accessToken, data.refreshToken);
+    const { data } = await this.authService.refreshTokens(refreshToken, res);
+    setAuthCookies(res, data.accessToken, data.refreshToken);
 
     return data;
-  }
-
-  private setAuthCookies(
-    res: Response,
-    accessToken: string,
-    refreshToken: string,
-  ) {
-    const isProd = process.env.NODE_ENV === 'production';
-
-    const baseCookieOptions = {
-      httpOnly: true,
-      secure: isProd,
-      sameSite: 'strict' as const,
-    };
-
-    res.cookie('access_token', accessToken, {
-      ...baseCookieOptions,
-      maxAge: 1000 * 60 * 60, // 1 ชั่วโมง
-    });
-
-    res.cookie('refresh_token', refreshToken, {
-      ...baseCookieOptions,
-      maxAge: 1000 * 60 * 60 * 24 * 7, // 7 วัน
-    });
   }
 
   @UseGuards(JwtCookieAuthGuard)

@@ -6,12 +6,14 @@ import {
 import { JwtService } from '@nestjs/jwt';
 import { InjectModel } from '@nestjs/mongoose';
 import * as argon2 from 'argon2';
+import { Response } from 'express';
 import { Model, Types } from 'mongoose';
 
-import { CreateUserDto } from 'src/users/dto/create-user.dto';
-import { User } from 'src/users/entities/user.entity';
-import { UsersService } from 'src/users/users.service';
-import { TokenPayload } from 'src/types';
+import { clearAuthCookies } from '@/auth/helper';
+import { CreateUserDto } from '@/users/dto/create-user.dto';
+import { User } from '@/users/entities/user.entity';
+import { UsersService } from '@/users/users.service';
+import { TokenPayload } from '@/types';
 
 import { SignInDto } from './dto/sign-in.dto';
 
@@ -50,7 +52,7 @@ export class AuthService {
     await this.usersService.update(userId, { refreshToken: undefined });
   }
 
-  async refreshTokens(refreshToken: string) {
+  async refreshTokens(refreshToken: string, res: Response) {
     try {
       const payload = await this.jwtService.verifyAsync<TokenPayload>(
         refreshToken,
@@ -67,6 +69,7 @@ export class AuthService {
 
       return { data: { user: user._id, ...tokens } };
     } catch {
+      clearAuthCookies(res);
       throw new ForbiddenException('Invalid refresh token');
     }
   }
