@@ -6,15 +6,14 @@ import {
   HttpCode,
   Param,
   UseGuards,
-  Headers,
   Get,
   Req,
 } from '@nestjs/common';
-import { AuthGuard } from '@nestjs/passport';
-import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { ApiTags } from '@nestjs/swagger';
 import { Request, Response } from 'express';
 
 import { JwtCookieAuthGuard } from '@/common/guards/jwt-cookie.guard';
+import { JwtRefreshGuard } from '@/common/guards/jwt-refresh.guard';
 import { CreateUserDto } from '@/users/dto/create-user.dto';
 
 import { AuthService } from './auth.service';
@@ -60,18 +59,22 @@ export class AuthController {
     return { message: 'Logout successful' };
   }
 
-  @UseGuards(AuthGuard('jwt-refresh'))
-  @ApiBearerAuth('access-token')
+  @UseGuards(JwtRefreshGuard)
   @Post('refresh-token')
   @HttpCode(200)
-  refreshToken(@Headers('authorization') authorization: string) {
-    const accessToken = authorization?.split(' ')[1]; // ตัด Bearer ออก
-
-    if (!accessToken) {
-      throw new Error('Access token is missing');
+  async refreshToken(
+    @Req() req: Request,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    const refreshToken = req.cookies['refresh_token'];
+    if (!refreshToken) {
+      throw new Error('Refresh token is missing');
     }
 
-    return this.authService.refreshTokens(accessToken);
+    const { data } = await this.authService.refreshTokens(refreshToken);
+    this.setAuthCookies(res, data.accessToken, data.refreshToken);
+
+    return data;
   }
 
   private setAuthCookies(
@@ -89,7 +92,7 @@ export class AuthController {
 
     res.cookie('access_token', accessToken, {
       ...baseCookieOptions,
-      maxAge: 1000 * 60 * 60 * 24, // 1 วัน
+      maxAge: 1000 * 60 * 60, // 1 ชั่วโมง
     });
 
     res.cookie('refresh_token', refreshToken, {

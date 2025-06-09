@@ -50,10 +50,10 @@ export class AuthService {
     await this.usersService.update(userId, { refreshToken: undefined });
   }
 
-  async refreshTokens(accessToken: string) {
+  async refreshTokens(refreshToken: string) {
     try {
       const payload = await this.jwtService.verifyAsync<TokenPayload>(
-        accessToken,
+        refreshToken,
         { secret: process.env.JWT_SECRET },
       );
 
@@ -67,7 +67,7 @@ export class AuthService {
 
       return { data: { user: user._id, ...tokens } };
     } catch {
-      throw new UnauthorizedException('Invalid refresh token');
+      throw new ForbiddenException('Invalid refresh token');
     }
   }
 
@@ -106,8 +106,7 @@ export class AuthService {
         { sub: user._id, email: user.email },
         {
           secret: process.env.JWT_SECRET,
-          // expiresIn: '1h',
-          expiresIn: '1m',
+          expiresIn: '1h',
         },
       ),
       this.jwtService.signAsync(

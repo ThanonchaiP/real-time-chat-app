@@ -3,10 +3,14 @@ import { useQuery } from "@tanstack/react-query";
 import { API_URL } from "@/constants";
 import { apiClient } from "@/lib/api-client";
 
-export const getMe = async () => {
-  return await apiClient.get(`/auth/me`, {
+import { User } from "../types";
+import { userSchema } from "../schemas";
+
+export const getMe = async (): Promise<User> => {
+  const { data } = await apiClient.get(`/auth/me`, {
     baseURL: API_URL,
   });
+  return userSchema.parse(data);
 };
 
 export const useGetMe = () => {

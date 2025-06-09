@@ -12,3 +12,23 @@ export const apiClient = axios.create({
   },
   withCredentials: true,
 });
+
+apiClient.interceptors.response.use(
+  (res) => res.data,
+  async (error) => {
+    const originalRequest = error.config;
+
+    if (error.response?.status === 401 && !originalRequest._retry) {
+      originalRequest._retry = true;
+
+      try {
+        await apiClient.post("/auth/refresh-token");
+        return apiClient(originalRequest); // Retry the original request
+      } catch (err) {
+        return Promise.reject(err);
+      }
+    }
+
+    return Promise.reject(error);
+  }
+);

@@ -42,7 +42,7 @@ export class UsersService {
   }
 
   async findOne(id: string) {
-    const user = await this.userModel.findById(id).select('-password').lean();
+    const user = await this.userModel.findById(id, { password: 0 }).lean();
 
     if (!user) {
       throw new HttpException('User not found', HttpStatus.NOT_FOUND);
