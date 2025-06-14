@@ -6,7 +6,10 @@ import {
   Patch,
   Param,
   Delete,
+  Query,
 } from '@nestjs/common';
+
+import { PaginationDto } from '@/common/dtos/pagination.dto';
 
 import { CreateRoomDto } from './dto/create-room.dto';
 import { UpdateRoomDto } from './dto/update-room.dto';
@@ -22,8 +25,8 @@ export class RoomsController {
   }
 
   @Get()
-  findAll() {
-    return this.roomsService.findAll();
+  findAll(@Query() paginationDto: PaginationDto) {
+    return this.roomsService.findAll(paginationDto);
   }
 
   @Get(':id')
