@@ -30,7 +30,7 @@ import {
 import { useRegister } from "@/features/auth";
 
 // Zod validation schema
-const registerSchema = z
+const RegisterSchema = z
   .object({
     name: z
       .string()
@@ -48,7 +48,7 @@ const registerSchema = z
     path: ["confirmPassword"],
   });
 
-type RegisterFormData = z.infer<typeof registerSchema>;
+type RegisterFormData = z.infer<typeof RegisterSchema>;
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -69,7 +69,7 @@ export default function RegisterPage() {
     formState: { errors, isValid, isSubmitting },
     watch,
   } = useForm<RegisterFormData>({
-    resolver: zodResolver(registerSchema),
+    resolver: zodResolver(RegisterSchema),
     mode: "onChange",
   });
 

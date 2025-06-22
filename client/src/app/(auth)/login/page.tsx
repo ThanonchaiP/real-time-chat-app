@@ -24,14 +24,14 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { useSignin } from "@/features/auth";
 
 // ✅ Zod Schema
-const loginSchema = z.object({
+const LoginSchema = z.object({
   email: z.string().email("Please enter a valid email address"),
   password: z.string(),
   rememberMe: z.boolean().optional(),
 });
 
 // ✅ Infer Type from Zod
-type LoginFormData = z.infer<typeof loginSchema>;
+type LoginFormData = z.infer<typeof LoginSchema>;
 
 export default function LoginPage() {
   const router = useRouter();
@@ -52,7 +52,7 @@ export default function LoginPage() {
     setValue,
     trigger,
   } = useForm<LoginFormData>({
-    resolver: zodResolver(loginSchema),
+    resolver: zodResolver(LoginSchema),
     mode: "onChange",
   });
 
