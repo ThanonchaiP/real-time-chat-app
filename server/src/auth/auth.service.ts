@@ -121,7 +121,7 @@ export class AuthService {
         { sub: user._id, email: user.email },
         {
           secret: process.env.JWT_SECRET,
-          expiresIn: '1d',
+          expiresIn: '7d',
         },
       ),
     ]);
