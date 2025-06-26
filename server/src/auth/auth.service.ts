@@ -48,8 +48,13 @@ export class AuthService {
     return { data: { user: user._id, ...tokens } };
   }
 
-  async logout(userId: string) {
-    await this.usersService.update(userId, { refreshToken: undefined });
+  async logout(accessToken: string) {
+    const payload = await this.jwtService.verifyAsync<TokenPayload>(
+      accessToken,
+      { secret: process.env.JWT_SECRET },
+    );
+
+    await this.usersService.update(payload.sub, { refreshToken: undefined });
   }
 
   async refreshTokens(refreshToken: string, res: Response) {

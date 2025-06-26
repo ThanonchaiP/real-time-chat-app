@@ -43,13 +43,13 @@ export class AuthController {
     return data;
   }
 
+  @UseGuards(JwtCookieAuthGuard)
   @Post('logout')
   @HttpCode(200)
-  async logout(
-    @Param('id') id: string,
-    @Res({ passthrough: true }) res: Response,
-  ) {
-    await this.authService.logout(id);
+  async logout(@Req() req: Request, @Res({ passthrough: true }) res: Response) {
+    const token = req.cookies['access_token'];
+
+    await this.authService.logout(token);
     clearAuthCookies(res);
 
     return { message: 'Logout successful' };

@@ -142,6 +142,7 @@ export default function LoginPage() {
                     id="password"
                     type={showPassword ? "text" : "password"}
                     placeholder="Enter your password"
+                    autoComplete="current-password"
                     className={`pl-10 pr-10 h-11 border-slate-200 focus:border-blue-500 focus:ring-blue-500 ${
                       errors.password
                         ? "border-red-500 focus:border-red-500 focus:ring-red-500"
