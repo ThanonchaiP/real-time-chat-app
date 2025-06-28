@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 
 import { useLogout } from "@/features/auth";
+import { useUser } from "@/hooks";
 import { cn } from "@/lib/utils";
 import { MenuKey } from "@/types";
 
@@ -26,28 +27,40 @@ interface NavbarProps {
   onMenuChange?: (menu: MenuKey) => void;
 }
 
-export const Navbar = ({ currentMenu, onMenuChange }: NavbarProps) => {
-  const navigations = [
-    {
-      id: "users" as MenuKey,
-      name: "Users",
-      icons: <UserRound size={24} />,
-    },
-    {
-      id: "chats" as MenuKey,
-      name: "Chats",
-      icons: <MessageSquareMore size={24} />,
-    },
-  ];
+const navigations = [
+  {
+    id: "users" as MenuKey,
+    name: "Users",
+    icons: <UserRound size={24} />,
+  },
+  {
+    id: "chats" as MenuKey,
+    name: "Chats",
+    icons: <MessageSquareMore size={24} />,
+  },
+];
 
-  const logout = useLogout({
+export const Navbar = ({ currentMenu, onMenuChange }: NavbarProps) => {
+  const userContext = useUser();
+
+  const { user } = userContext;
+
+  const { mutate } = useLogout({
     onSuccess: () => {
       window.location.href = "/login";
     },
   });
 
+  const getAvatarName = () => {
+    if (!user) return "US";
+
+    const [firstName, lastName = ""] = user.name.split(" ");
+    return `${firstName.charAt(0)}${lastName.charAt(0)}`.trim().toUpperCase();
+  };
+
   const onLogout = () => {
-    logout.mutate();
+    mutate();
+    userContext.logout();
   };
 
   return (
@@ -57,7 +70,7 @@ export const Navbar = ({ currentMenu, onMenuChange }: NavbarProps) => {
 
         <div className="flex flex-col gap-6 mt-24">
           {navigations.map((nav) => (
-            <Tooltip key={nav.id}>
+            <Tooltip key={nav.id} delayDuration={200}>
               <TooltipTrigger asChild>
                 <button
                   className={cn(
@@ -85,8 +98,11 @@ export const Navbar = ({ currentMenu, onMenuChange }: NavbarProps) => {
         <DropdownMenuTrigger asChild>
           <Avatar className="w-10 h-10 cursor-pointer">
             <AvatarImage src="" />
-            <AvatarFallback className="bg-[#EFF1F2] font-bold">
-              CN
+            <AvatarFallback
+              className="font-bold text-white"
+              style={{ backgroundColor: user?.color }}
+            >
+              {getAvatarName()}
             </AvatarFallback>
           </Avatar>
         </DropdownMenuTrigger>
