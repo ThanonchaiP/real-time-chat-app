@@ -27,13 +27,19 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
     setUser(data);
   }, [data]);
 
-  if (isLoading) {
-    return <div>Loading...</div>; // You can replace this with a loading spinner or skeleton
-  }
+  if (isLoading) return <Loader />;
 
   return (
     <UserContext.Provider value={{ user, setUser, logout }}>
       {children}
     </UserContext.Provider>
+  );
+};
+
+const Loader = () => {
+  return (
+    <div className="flex items-center justify-center h-screen">
+      <div className="loader" />
+    </div>
   );
 };
