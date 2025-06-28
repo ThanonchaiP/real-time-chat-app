@@ -111,6 +111,7 @@ export default function LoginPage() {
                   <Input
                     id="email"
                     type="email"
+                    autoComplete="username"
                     placeholder="Enter your email"
                     className={`pl-10 h-11 border-slate-200 focus:border-blue-500 focus:ring-blue-500 ${
                       errors.email
