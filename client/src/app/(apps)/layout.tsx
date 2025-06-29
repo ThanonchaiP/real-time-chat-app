@@ -16,7 +16,7 @@ const AppsLayout = ({ children }: { children: React.ReactNode }) => {
 
   return (
     <UserProvider>
-      <div className="min-h-screen flex">
+      <div className="h-screen flex overflow-hidden">
         <Navbar currentMenu={currentMenu} onMenuChange={handleMenuChange} />
         <Sidebar currentMenu={currentMenu} />
         {children}

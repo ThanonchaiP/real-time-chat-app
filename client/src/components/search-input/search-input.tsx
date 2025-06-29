@@ -18,12 +18,12 @@ export function SearchInput({
   onDebounce,
   ...props
 }: SearchInputProps) {
-  const [value, setValue] = useState("");
+  const [value, setValue] = useState<string | undefined>(undefined);
 
   const debouncedValue = useDebounce(value, debounceDelay ?? 500);
 
   useEffect(() => {
-    if (onDebounce) {
+    if (onDebounce && debouncedValue !== undefined) {
       onDebounce(debouncedValue);
     }
   }, [debouncedValue, onDebounce]);

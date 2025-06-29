@@ -65,6 +65,12 @@ importers:
       react-hook-form:
         specifier: ^7.56.4
         version: 7.56.4(react@19.1.0)
+      simplebar:
+        specifier: ^6.3.1
+        version: 6.3.1
+      simplebar-react:
+        specifier: ^3.3.0
+        version: 3.3.1(react@19.1.0)
       sonner:
         specifier: ^2.0.5
         version: 2.0.5(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
@@ -1850,8 +1856,14 @@ packages:
     resolution: {integrity: sha512-iPZK6eYjbxRu3uB4/WZ3EsEIMJFMqAoopl3R+zuq0UjcAm/MO6KCweDgPfP3elTztoKP3KtnVHxTn2NHBSDVUw==}
     engines: {node: '>=10'}
 
+  lodash-es@4.17.21:
+    resolution: {integrity: sha512-mKnC+QJ9pWVzv+C4/U3rRsHapFfHvQFoFB92e52xeyGMcX6/OlIl78je1u8vePzYZSkkogMPJ2yjxxsb89cxyw==}
+
   lodash.merge@4.6.2:
     resolution: {integrity: sha512-0KpjqXRVvrYyCsX1swR/XTK0va6VQkQM6MNo7PqW77ByjAhoARA8EfrP1N4+KlKj8YS0ZUCtRT/YUuhyYDujIQ==}
+
+  lodash@4.17.21:
+    resolution: {integrity: sha512-v2kDEe57lecTulaDIuNTPy3Ry4gLGJ6Z1O3vE1krgXZNrsQ+LFTGHVxVjcXPs17LhbZVGedAJv8XZ1tvj5FvSg==}
 
   loose-envify@1.4.0:
     resolution: {integrity: sha512-lyuxPGr/Wfhrlem2CL/UcnUc1zcqKAImBDzukY7Y5F/yQiNdko6+fRLevlw1HgMySw7f611UIY408EtxRSoK3Q==}
@@ -2199,6 +2211,17 @@ packages:
 
   simple-swizzle@0.2.2:
     resolution: {integrity: sha512-JA//kQgZtbuY83m+xT+tXJkmJncGMTFT+C+g2h2R9uxkYIrE2yy9sgmcLhCnw57/WSD+Eh3J97FPEDFnbXnDUg==}
+
+  simplebar-core@1.3.1:
+    resolution: {integrity: sha512-d2JFNivCgxykWz9//MhUbpmxXmL4qDfZpUulmeY4KE1cq2amr+6rZhIOv6JyCprWP3yFlayYb0J5ApKV81r6Sg==}
+
+  simplebar-react@3.3.1:
+    resolution: {integrity: sha512-+jcY1Sd6HA2asoySOb5G+YTKboiNsQ0e0TP5JxoC3fw3PpiKTUx4sCj9fEr6Rz9CkViQmazLM4OipMFU18Mf4A==}
+    peerDependencies:
+      react: '>=16.8.0'
+
+  simplebar@6.3.1:
+    resolution: {integrity: sha512-8xGpty5YCvzNAJLil8yn81x1WLChu/Wce+jYOyIuT3uZvl5FoYodUH97D7GllZSKUolFdXQg+aW1nMMIWPN/PA==}
 
   sonner@2.0.5:
     resolution: {integrity: sha512-YwbHQO6cSso3HBXlbCkgrgzDNIhws14r4MO87Ofy+cV2X7ES4pOoAK3+veSmVTvqNx1BWUxlhPmZzP00Crk2aQ==}
@@ -4212,7 +4235,11 @@ snapshots:
     dependencies:
       p-locate: 5.0.0
 
+  lodash-es@4.17.21: {}
+
   lodash.merge@4.6.2: {}
+
+  lodash@4.17.21: {}
 
   loose-envify@1.4.0:
     dependencies:
@@ -4602,6 +4629,20 @@ snapshots:
     dependencies:
       is-arrayish: 0.3.2
     optional: true
+
+  simplebar-core@1.3.1:
+    dependencies:
+      lodash: 4.17.21
+      lodash-es: 4.17.21
+
+  simplebar-react@3.3.1(react@19.1.0):
+    dependencies:
+      react: 19.1.0
+      simplebar-core: 1.3.1
+
+  simplebar@6.3.1:
+    dependencies:
+      simplebar-core: 1.3.1
 
   sonner@2.0.5(react-dom@19.1.0(react@19.1.0))(react@19.1.0):
     dependencies:
