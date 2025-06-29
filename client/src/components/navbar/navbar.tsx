@@ -11,6 +11,7 @@ import { useLogout } from "@/features/auth";
 import { useUser } from "@/hooks";
 import { cn } from "@/lib/utils";
 import { MenuKey } from "@/types";
+import { getAvatarName } from "@/utils";
 
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import {
@@ -50,13 +51,6 @@ export const Navbar = ({ currentMenu, onMenuChange }: NavbarProps) => {
       window.location.href = "/login";
     },
   });
-
-  const getAvatarName = () => {
-    if (!user) return "US";
-
-    const [firstName, lastName = ""] = user.name.split(" ");
-    return `${firstName.charAt(0)}${lastName.charAt(0)}`.trim().toUpperCase();
-  };
 
   const onLogout = () => {
     mutate();
@@ -102,7 +96,7 @@ export const Navbar = ({ currentMenu, onMenuChange }: NavbarProps) => {
               className="font-bold text-white"
               style={{ backgroundColor: user?.color }}
             >
-              {getAvatarName()}
+              {getAvatarName(user?.name)}
             </AvatarFallback>
           </Avatar>
         </DropdownMenuTrigger>
