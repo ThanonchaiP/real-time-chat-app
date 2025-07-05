@@ -24,14 +24,14 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { useSignin } from "@/features/auth";
 
 // ✅ Zod Schema
-const loginSchema = z.object({
+const LoginSchema = z.object({
   email: z.string().email("Please enter a valid email address"),
   password: z.string(),
   rememberMe: z.boolean().optional(),
 });
 
 // ✅ Infer Type from Zod
-type LoginFormData = z.infer<typeof loginSchema>;
+type LoginFormData = z.infer<typeof LoginSchema>;
 
 export default function LoginPage() {
   const router = useRouter();
@@ -52,7 +52,7 @@ export default function LoginPage() {
     setValue,
     trigger,
   } = useForm<LoginFormData>({
-    resolver: zodResolver(loginSchema),
+    resolver: zodResolver(LoginSchema),
     mode: "onChange",
   });
 
@@ -111,6 +111,7 @@ export default function LoginPage() {
                   <Input
                     id="email"
                     type="email"
+                    autoComplete="username"
                     placeholder="Enter your email"
                     className={`pl-10 h-11 border-slate-200 focus:border-blue-500 focus:ring-blue-500 ${
                       errors.email
@@ -142,6 +143,7 @@ export default function LoginPage() {
                     id="password"
                     type={showPassword ? "text" : "password"}
                     placeholder="Enter your password"
+                    autoComplete="current-password"
                     className={`pl-10 pr-10 h-11 border-slate-200 focus:border-blue-500 focus:ring-blue-500 ${
                       errors.password
                         ? "border-red-500 focus:border-red-500 focus:ring-red-500"

@@ -8,11 +8,14 @@ import { InjectModel } from '@nestjs/mongoose';
 import * as argon2 from 'argon2';
 import { Model } from 'mongoose';
 
-import { PROFILE_COLOR } from 'src/common/constants';
+import { PaginationDto } from '@/common/dtos/pagination.dto';
+import { PageMetaDto } from '@/common/dtos/page-meta.dto';
+import { PageDto } from '@/common/dtos/page.dto';
+import { PROFILE_COLOR } from '@/common/constants';
 
-import { User } from './entities/user.entity';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { User } from './entities/user.entity';
 
 @Injectable()
 export class UsersService {
@@ -37,8 +40,31 @@ export class UsersService {
     return await this.userModel.create(user);
   }
 
-  async findAll() {
-    return await this.userModel.find().select('-password').lean();
+  async findAll(paginationDto: PaginationDto) {
+    try {
+      const { page = 1, limit = 10 } = paginationDto;
+      const skip = (page - 1) * limit;
+
+      const [users, total] = await Promise.all([
+        this.userModel
+          .find()
+          .select('-password')
+          .skip(skip)
+          .limit(limit)
+          .lean(),
+        this.userModel.countDocuments(),
+      ]);
+
+      const pageMetaDto = new PageMetaDto({
+        page,
+        limit,
+        total,
+      });
+
+      return new PageDto(users, pageMetaDto);
+    } catch (error) {
+      console.error('Error fetching users:', error);
+    }
   }
 
   async findOne(id: string) {

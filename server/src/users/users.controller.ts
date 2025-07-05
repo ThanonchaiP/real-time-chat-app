@@ -6,9 +6,12 @@ import {
   Patch,
   Param,
   UseGuards,
+  Query,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+
+import { PaginationDto } from '@/common/dtos/pagination.dto';
 
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
@@ -25,10 +28,10 @@ export class UsersController {
   }
 
   @Get()
-  @UseGuards(AuthGuard('jwt'))
-  @ApiBearerAuth('access-token')
-  findAll() {
-    return this.usersService.findAll();
+  // @UseGuards(AuthGuard('jwt'))
+  // @ApiBearerAuth('access-token')
+  findAll(@Query() paginationDto: PaginationDto) {
+    return this.usersService.findAll(paginationDto);
   }
 
   @Get(':id')

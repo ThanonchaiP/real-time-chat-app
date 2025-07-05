@@ -4,13 +4,13 @@ import { API_URL } from "@/constants";
 import { apiClient } from "@/lib/api-client";
 
 import { User } from "../types";
-import { userSchema } from "../schemas";
+import { UserSchema } from "../schemas";
 
 export const getMe = async (): Promise<User> => {
   const { data } = await apiClient.get(`/auth/me`, {
     baseURL: API_URL,
   });
-  return userSchema.parse(data);
+  return UserSchema.parse(data);
 };
 
 export const useGetMe = () => {

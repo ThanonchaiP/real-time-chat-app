@@ -6,7 +6,10 @@ import {
   Patch,
   Param,
   Delete,
+  Query,
 } from '@nestjs/common';
+
+import { PaginationDto } from '@/common/dtos/pagination.dto';
 
 import { CreateMessageDto } from './dto/create-message.dto';
 import { UpdateMessageDto } from './dto/update-message.dto';
@@ -22,8 +25,8 @@ export class MessagesController {
   }
 
   @Get()
-  findAll() {
-    return this.messagesService.findAll();
+  findAll(@Query() paginationDto: PaginationDto) {
+    return this.messagesService.findAll(paginationDto);
   }
 
   @Get(':id')
