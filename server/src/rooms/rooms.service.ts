@@ -100,4 +100,15 @@ export class RoomsService {
   remove(id: string) {
     return this.roomModel.findByIdAndDelete(id).exec();
   }
+
+  addUserToWelcomeGroup(userId: string) {
+    return this.roomModel
+      .findOneAndUpdate(
+        { name: 'Welcome' },
+        { $addToSet: { participants: userId } },
+        { new: true },
+      )
+      .exec();
+  }
 }
+1;

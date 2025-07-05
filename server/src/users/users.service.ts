@@ -12,6 +12,7 @@ import { PaginationDto } from '@/common/dtos/pagination.dto';
 import { PageMetaDto } from '@/common/dtos/page-meta.dto';
 import { PageDto } from '@/common/dtos/page.dto';
 import { PROFILE_COLOR } from '@/common/constants';
+import { RoomsService } from '@/rooms/rooms.service';
 
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
@@ -19,7 +20,10 @@ import { User } from './entities/user.entity';
 
 @Injectable()
 export class UsersService {
-  constructor(@InjectModel(User.name) private userModel: Model<User>) {}
+  constructor(
+    @InjectModel(User.name) private userModel: Model<User>,
+    private readonly roomService: RoomsService,
+  ) {}
 
   async create(createUserDto: CreateUserDto) {
     const { email, password, name } = createUserDto;
@@ -37,7 +41,18 @@ export class UsersService {
       color: PROFILE_COLOR[Math.floor(Math.random() * PROFILE_COLOR.length)],
     };
 
-    return await this.userModel.create(user);
+    const newUser = await this.userModel.create(user);
+
+    if (!newUser) {
+      throw new HttpException(
+        'User creation failed',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+
+    this.roomService.addUserToWelcomeGroup(newUser._id.toString());
+
+    return newUser;
   }
 
   async findAll(paginationDto: PaginationDto) {
