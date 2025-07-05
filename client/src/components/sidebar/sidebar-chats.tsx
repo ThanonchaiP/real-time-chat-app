@@ -29,7 +29,10 @@ export const SidebarChats = () => {
     <div className="h-full">
       <div className="p-6 pb-2">
         <h2 className="text-xl font-semibold mb-6">Chats</h2>
-        <SearchInput onDebounce={(value) => console.log(value)} />
+        <SearchInput
+          placeholder="Search messages or users"
+          onDebounce={(value) => console.log(value)}
+        />
       </div>
 
       <h4 className="font-semibold m-6 mb-2">Recent</h4>

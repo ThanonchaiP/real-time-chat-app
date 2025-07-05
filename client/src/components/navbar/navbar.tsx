@@ -64,7 +64,7 @@ export const Navbar = ({ currentMenu, onMenuChange }: NavbarProps) => {
 
         <div className="flex flex-col gap-6 mt-24">
           {navigations.map((nav) => (
-            <Tooltip key={nav.id} delayDuration={200}>
+            <Tooltip key={nav.id} delayDuration={200} disableHoverableContent>
               <TooltipTrigger asChild>
                 <button
                   className={cn(

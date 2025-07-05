@@ -33,7 +33,7 @@ export function SearchInput({
       <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground h-4 w-4" />
       <Input
         type="text"
-        placeholder="Search messages or users"
+        placeholder="Search..."
         className={cn(
           "pl-10 h-[45px] bg-[#E6EBF5] focus-visible:ring-0 focus-visible:outline-none focus-visible:border-transparent",
           className

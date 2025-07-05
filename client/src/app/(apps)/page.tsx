@@ -1,7 +1,9 @@
+"use client";
+
 export default function HomePage() {
   return (
-    <>
-      <div className="flex-1">Please Select Room</div>
-    </>
+    <div className="h-full flex-1">
+      <h1>Please Select Room</h1>
+    </div>
   );
 }

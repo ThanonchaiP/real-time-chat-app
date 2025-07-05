@@ -7,11 +7,14 @@ import {
   Param,
   Delete,
   Query,
+  UseGuards,
+  Req,
 } from '@nestjs/common';
-
-import { PaginationDto } from '@/common/dtos/pagination.dto';
+import { JwtCookieAuthGuard } from '@/common/guards/jwt-cookie.guard';
+import { Request } from 'express';
 
 import { CreateRoomDto } from './dto/create-room.dto';
+import { RoomQueryParamDto } from './dto/room-query-param.dto';
 import { UpdateRoomDto } from './dto/update-room.dto';
 import { RoomsService } from './rooms.service';
 
@@ -25,13 +28,20 @@ export class RoomsController {
   }
 
   @Get()
-  findAll(@Query() paginationDto: PaginationDto) {
-    return this.roomsService.findAll(paginationDto);
+  findAll(@Query() query: RoomQueryParamDto) {
+    return this.roomsService.findAll(query);
   }
 
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.roomsService.findOne(id);
+  }
+
+  @UseGuards(JwtCookieAuthGuard)
+  @Get('user/:userId')
+  findRoomByUserId(@Param('userId') userId: string, @Req() req: Request) {
+    const token = req.cookies['access_token'];
+    return this.roomsService.findRoomByUserId(userId, token);
   }
 
   @Patch(':id')
