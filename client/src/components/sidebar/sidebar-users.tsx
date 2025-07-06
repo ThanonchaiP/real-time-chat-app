@@ -3,7 +3,6 @@ import { useState } from "react";
 import SimpleBar from "simplebar-react";
 
 import { useListRoom, useListUser } from "@/features/home";
-import { useUser } from "@/hooks";
 
 import { UserItem } from "./user-item";
 import { SearchInput } from "../search-input";
@@ -12,9 +11,11 @@ import "simplebar/dist/simplebar.min.css";
 
 const cache: Record<string, string> = {};
 
-export const SidebarUsers = () => {
-  const userContext = useUser();
+type SidebarUsersProps = {
+  userId: string;
+};
 
+export const SidebarUsers = ({ userId }: SidebarUsersProps) => {
   const { data } = useListUser({ limit: 100 });
   const { data: roomData } = useListRoom({ type: "group" });
 
@@ -47,7 +48,7 @@ export const SidebarUsers = () => {
       <SimpleBar style={{ maxHeight: "calc(100vh - 320px)" }} autoHide={true}>
         <ul>
           {dataSource.map((user) => {
-            if (user._id === userContext.user?._id) return null;
+            if (user._id === userId) return null;
 
             return <UserItem key={user._id} {...user} />;
           })}

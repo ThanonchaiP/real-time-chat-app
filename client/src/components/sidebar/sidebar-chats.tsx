@@ -1,6 +1,8 @@
 import { useParams, useRouter } from "next/navigation";
 import SimpleBar from "simplebar-react";
 
+import { useListRecent } from "@/features/home";
+
 import { SearchInput } from "../search-input";
 
 import { ChatItem } from "./chat-item";
@@ -15,9 +17,17 @@ const chats = Array.from({ length: 20 }, (_, i) => ({
   typing: Math.random() < 0.5,
 }));
 
-export const SidebarChats = () => {
+type SidebarChatsProps = {
+  userId: string;
+};
+
+export const SidebarChats = ({ userId }: SidebarChatsProps) => {
   const router = useRouter();
   const params = useParams();
+
+  const { data } = useListRecent({
+    userId,
+  });
 
   const roomId = params.roomId as string;
 
