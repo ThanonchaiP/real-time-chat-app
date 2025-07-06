@@ -4,20 +4,22 @@ import SimpleBar from "simplebar-react";
 
 import { useListRoom, useListUser } from "@/features/home";
 
-import { UserItem } from "./user-item";
 import { SearchInput } from "../search-input";
 
-import "simplebar/dist/simplebar.min.css";
+import { ChatSkeleton } from "./chat-skeleton";
+import { UserItem } from "./user-item";
 
-const cache: Record<string, string> = {};
+import "simplebar/dist/simplebar.min.css";
 
 type SidebarUsersProps = {
   userId: string;
 };
 
 export const SidebarUsers = ({ userId }: SidebarUsersProps) => {
-  const { data } = useListUser({ limit: 100 });
-  const { data: roomData } = useListRoom({ type: "group" });
+  const { data, isLoading } = useListUser({ limit: 100 });
+  const { data: roomData, isLoading: isLoadingRooms } = useListRoom({
+    type: "group",
+  });
 
   const [search, setSearch] = useState("");
 
@@ -37,6 +39,7 @@ export const SidebarUsers = ({ userId }: SidebarUsersProps) => {
       </div>
 
       <h4 className="font-semibold m-6 mb-2">Groups</h4>
+      {isLoadingRooms && <ChatSkeleton />}
       {roomData?.data?.map((room) => (
         <Link key={room._id} href={`/messages/${room._id}`} className="block">
           <UserItem _id={room._id} color="skyblue" name={room.name} />
@@ -46,6 +49,10 @@ export const SidebarUsers = ({ userId }: SidebarUsersProps) => {
       <h4 className="font-semibold m-6 mb-2">Users</h4>
 
       <SimpleBar style={{ maxHeight: "calc(100vh - 320px)" }} autoHide={true}>
+        {isLoading &&
+          Array.from({ length: 10 }).map((_, index) => (
+            <ChatSkeleton key={index} isRecent />
+          ))}
         <ul>
           {dataSource.map((user) => {
             if (user._id === userId) return null;
