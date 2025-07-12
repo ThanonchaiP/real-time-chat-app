@@ -14,14 +14,9 @@ import { MenuKey } from "@/types";
 import { getAvatarName } from "@/utils";
 
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuShortcut,
-  DropdownMenuTrigger,
-} from "../ui/dropdown-menu";
+import { Button } from "../ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip";
+import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
 
 interface NavbarProps {
   currentMenu?: MenuKey;
@@ -88,8 +83,8 @@ export const Navbar = ({ currentMenu, onMenuChange }: NavbarProps) => {
         </div>
       </div>
 
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
+      <Popover>
+        <PopoverTrigger asChild>
           <Avatar className="w-10 h-10 cursor-pointer">
             <AvatarImage src="" />
             <AvatarFallback
@@ -99,16 +94,28 @@ export const Navbar = ({ currentMenu, onMenuChange }: NavbarProps) => {
               {getAvatarName(user?.name)}
             </AvatarFallback>
           </Avatar>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent className="w-20" align="start">
-          <DropdownMenuItem className="cursor-pointer" onClick={onLogout}>
+        </PopoverTrigger>
+        <PopoverContent
+          className="w-48 text-center"
+          side="right"
+          align="end"
+          sideOffset={8}
+        >
+          <p className="text-sm text-muted-foreground truncate mb-2">
+            Signed in as
+          </p>
+          <p className="font-medium">{user?.name || "Anonymous"}</p>
+          <Button
+            variant="destructive"
+            size="sm"
+            className="mt-4 w-full"
+            onClick={onLogout}
+          >
+            <LogOut className="mr-1" size={16} />
             Log out
-            <DropdownMenuShortcut>
-              <LogOut />
-            </DropdownMenuShortcut>
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
+          </Button>
+        </PopoverContent>
+      </Popover>
     </div>
   );
 };
