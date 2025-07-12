@@ -14,7 +14,12 @@ interface UserItemProps {
   isGroup?: boolean;
 }
 
-export const UserItem = ({ color, name, _id, isGroup }: UserItemProps) => {
+export const UserItem = ({
+  color,
+  name,
+  _id,
+  isGroup = false,
+}: UserItemProps) => {
   const router = useRouter();
   const params = useParams();
   const currentRoom = params.roomId as string;
@@ -28,7 +33,12 @@ export const UserItem = ({ color, name, _id, isGroup }: UserItemProps) => {
   });
 
   const handleUserClick = () => {
-    if (isGroup || currentRoom === cache?.[_id]) return;
+    if (
+      isGroup ||
+      (currentRoom === cache?.[_id] && currentRoom !== undefined)
+    ) {
+      return;
+    }
 
     if (cache[_id]) {
       router.push(`/messages/${cache[_id]}`);
