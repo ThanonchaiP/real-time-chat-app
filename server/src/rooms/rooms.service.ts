@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
@@ -7,6 +7,7 @@ import { PaginationDto } from '@/common/dtos/pagination.dto';
 import { PageMetaDto } from '@/common/dtos/page-meta.dto';
 import { PageDto } from '@/common/dtos/page.dto';
 import { TokenPayload } from '@/types';
+import { UsersService } from '@/users/users.service';
 
 import { CreateRoomDto } from './dto/create-room.dto';
 import { RoomQueryParamDto } from './dto/room-query-param.dto';
@@ -18,6 +19,8 @@ export class RoomsService {
   constructor(
     @InjectModel(Room.name) private roomModel: Model<Room>,
     private readonly jwtService: JwtService,
+    @Inject(forwardRef(() => UsersService))
+    private readonly usersService: UsersService,
   ) {}
 
   create(createRoomDto: CreateRoomDto) {
@@ -110,5 +113,64 @@ export class RoomsService {
       )
       .exec();
   }
+
+  async getRecentMessage(userId: string) {
+    // 1️⃣ ดึงห้องพร้อมข้อความล่าสุดด้วย aggregation
+    const rooms = await this.roomModel.aggregate([
+      {
+        $match: {
+          participants: userId,
+        },
+      },
+      {
+        $lookup: {
+          from: 'messages',
+          let: { roomId: '$_id' },
+          pipeline: [
+            { $match: { $expr: { $eq: ['$roomId', '$$roomId'] } } },
+            { $sort: { createdAt: -1 } },
+            { $limit: 1 },
+          ],
+          as: 'lastMessage',
+        },
+      },
+      { $unwind: '$lastMessage' },
+      {
+        $sort: {
+          'lastMessage.createdAt': -1,
+        },
+      },
+    ]);
+
+    // 2️⃣ หา chatWithIds ของทุกห้อง direct (ยกเว้น userId ตัวเอง)
+    const chatWithIds = rooms
+      .filter(
+        (room) => room.type === 'direct' && room.participants.length === 2,
+      )
+      .map((room) => room.participants.find((id: string) => id !== userId));
+
+    // 3️⃣ ดึง user ทีเดียวทั้งหมด
+    const users = await this.usersService.findManyByIds(chatWithIds);
+
+    // 4️⃣ สร้าง map userId → user
+    const userMap = new Map(users.map((u) => [u._id.toString(), u]));
+
+    // 5️⃣ ใส่ชื่อคู่สนทนาลงในห้อง
+    const updatedRooms = rooms.map((room) => {
+      if (room.type === 'direct' && room.participants.length === 2) {
+        const chatWithId = room.participants.find(
+          (id: string) => id !== userId,
+        );
+        const chatWithUser = userMap.get(chatWithId?.toString());
+        return {
+          ...room,
+          name: chatWithUser?.name ?? 'Unknown',
+          chatWithId,
+        };
+      }
+      return room;
+    });
+
+    return updatedRooms;
+  }
 }
-1;

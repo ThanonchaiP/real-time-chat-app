@@ -53,4 +53,10 @@ export class RoomsController {
   remove(@Param('id') id: string) {
     return this.roomsService.remove(id);
   }
+
+  @UseGuards(JwtCookieAuthGuard)
+  @Get('recent/:userId')
+  getRecentMessage(@Param('userId') userId: string) {
+    return this.roomsService.getRecentMessage(userId);
+  }
 }

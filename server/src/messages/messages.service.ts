@@ -50,4 +50,8 @@ export class MessagesService {
   remove(id: string) {
     return this.messageModel.findByIdAndDelete(id).exec();
   }
+
+  getLastMessage(roomId: string) {
+    return this.messageModel.findOne({ roomId }).sort({ createdAt: -1 }).exec();
+  }
 }

@@ -1,6 +1,8 @@
 import {
+  forwardRef,
   HttpException,
   HttpStatus,
+  Inject,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
@@ -22,6 +24,7 @@ import { User } from './entities/user.entity';
 export class UsersService {
   constructor(
     @InjectModel(User.name) private userModel: Model<User>,
+    @Inject(forwardRef(() => RoomsService))
     private readonly roomService: RoomsService,
   ) {}
 
@@ -103,5 +106,9 @@ export class UsersService {
     }
 
     return existingUser;
+  }
+
+  async findManyByIds(ids: string[]) {
+    return this.userModel.find({ _id: { $in: ids } }).lean();
   }
 }
