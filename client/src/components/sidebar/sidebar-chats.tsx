@@ -6,6 +6,7 @@ import { useListRecent } from "@/features/home";
 import { SearchInput } from "../search-input";
 
 import { ChatItem } from "./chat-item";
+import { ChatSkeleton } from "./chat-skeleton";
 
 import "simplebar/dist/simplebar.min.css";
 
@@ -17,7 +18,7 @@ export const SidebarChats = ({ userId }: SidebarChatsProps) => {
   const router = useRouter();
   const params = useParams();
 
-  const { data } = useListRecent({ userId });
+  const { data, isLoading } = useListRecent({ userId });
 
   const roomId = params.roomId as string;
 
@@ -37,6 +38,11 @@ export const SidebarChats = ({ userId }: SidebarChatsProps) => {
 
       <h4 className="font-semibold m-6 mb-2">Recent</h4>
       <SimpleBar style={{ maxHeight: "calc(100vh - 200px)" }} autoHide={true}>
+        {isLoading &&
+          Array.from({ length: 10 }).map((_, index) => (
+            <ChatSkeleton key={index} isRecent />
+          ))}
+
         {data?.map((room) => (
           <ChatItem
             typing={true}
