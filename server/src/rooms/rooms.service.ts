@@ -130,6 +130,14 @@ export class RoomsService {
             { $match: { $expr: { $eq: ['$roomId', '$$roomId'] } } },
             { $sort: { createdAt: -1 } },
             { $limit: 1 },
+            {
+              $project: {
+                _id: 0,
+                createdAt: 1,
+                content: 1,
+                contentType: 1,
+              },
+            },
           ],
           as: 'lastMessage',
         },

@@ -9,14 +9,6 @@ import { ChatItem } from "./chat-item";
 
 import "simplebar/dist/simplebar.min.css";
 
-const chats = Array.from({ length: 20 }, (_, i) => ({
-  id: `${i + 1}`,
-  name: `Chat ${i + 1}`,
-  lastMessage: `Last message in chat ${i + 1}`,
-  timestamp: new Date().toISOString(),
-  typing: Math.random() < 0.5,
-}));
-
 type SidebarChatsProps = {
   userId: string;
 };
@@ -25,9 +17,7 @@ export const SidebarChats = ({ userId }: SidebarChatsProps) => {
   const router = useRouter();
   const params = useParams();
 
-  const { data } = useListRecent({
-    userId,
-  });
+  const { data } = useListRecent({ userId });
 
   const roomId = params.roomId as string;
 
@@ -47,12 +37,13 @@ export const SidebarChats = ({ userId }: SidebarChatsProps) => {
 
       <h4 className="font-semibold m-6 mb-2">Recent</h4>
       <SimpleBar style={{ maxHeight: "calc(100vh - 200px)" }} autoHide={true}>
-        {chats.map((chat) => (
+        {data?.map((room) => (
           <ChatItem
-            {...chat}
-            key={chat.id}
+            typing={true}
+            data={room}
+            key={room._id}
             onClick={handleChatClick}
-            isActive={roomId === chat.id}
+            isActive={roomId === room._id}
           />
         ))}
       </SimpleBar>

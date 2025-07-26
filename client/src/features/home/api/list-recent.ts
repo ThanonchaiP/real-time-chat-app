@@ -1,17 +1,21 @@
 import { useQuery } from "@tanstack/react-query";
+import { z } from "zod";
 
 import { API_URL } from "@/constants";
 import { apiClient } from "@/lib/api-client";
+
+import { RoomRecentSchema } from "../schemas";
+import { RoomRecent } from "../types";
 
 type ListRecent = {
   userId: string;
 };
 
-export const listRecent = async (params: ListRecent): Promise<any> => {
-  const response = await apiClient.get(`/rooms/recent/${params.userId}`, {
+export const listRecent = async (params: ListRecent): Promise<RoomRecent[]> => {
+  const { data } = await apiClient.get(`/rooms/recent/${params.userId}`, {
     baseURL: API_URL,
   });
-  return response;
+  return z.array(RoomRecentSchema).parse(data);
 };
 
 export const useListRecent = (params: ListRecent) => {
