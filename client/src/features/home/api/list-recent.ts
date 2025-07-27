@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import { useEffect } from "react";
 import { z } from "zod";
 
 import { API_URL } from "@/constants";
@@ -24,6 +25,12 @@ export const useListRecent = (params: ListRecent) => {
     queryFn: () => listRecent(params),
     enabled: !!params.userId,
   });
+
+  useEffect(() => {
+    if (query.isError) {
+      console.error("Error fetching recent rooms:", query.error);
+    }
+  }, [query.error]);
 
   return query;
 };

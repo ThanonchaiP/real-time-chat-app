@@ -28,5 +28,5 @@ export const RoomRecentSchema = z.object({
     contentType: z.string(),
     createdAt: z.string(),
   }),
-  chatWithId: z.string(),
+  chatWithId: z.string().optional(),
 });

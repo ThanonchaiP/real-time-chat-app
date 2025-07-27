@@ -45,7 +45,7 @@ export const SidebarChats = ({ userId }: SidebarChatsProps) => {
 
         {data?.map((room) => (
           <ChatItem
-            typing={true}
+            typing={false}
             data={room}
             key={room._id}
             onClick={handleChatClick}

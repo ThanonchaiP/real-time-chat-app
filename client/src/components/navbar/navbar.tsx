@@ -55,7 +55,7 @@ export const Navbar = ({ currentMenu, onMenuChange }: NavbarProps) => {
   return (
     <div className="min-w-[75px] max-w-[75px] flex flex-col items-center justify-between border-r py-6">
       <div className="flex flex-col items-center">
-        <BotMessageSquareIcon className="text-sky-600" size={38} />
+        <BotMessageSquareIcon className="text-blue-500" size={38} />
 
         <div className="flex flex-col gap-6 mt-24">
           {navigations.map((nav) => (
@@ -63,8 +63,8 @@ export const Navbar = ({ currentMenu, onMenuChange }: NavbarProps) => {
               <TooltipTrigger asChild>
                 <button
                   className={cn(
-                    "size-14 flex items-center justify-center rounded cursor-pointer text-gray-500 hover:text-sky-600",
-                    currentMenu === nav.id && "bg-sky-50 text-sky-600"
+                    "size-14 flex items-center justify-center rounded cursor-pointer text-gray-500 hover:text-blue-500",
+                    currentMenu === nav.id && "bg-sky-50 text-blue-500"
                   )}
                   aria-label={nav.name}
                   onClick={() => onMenuChange?.(nav.id)}

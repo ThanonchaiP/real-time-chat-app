@@ -18,10 +18,12 @@ apiClient.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config;
 
+    const refreshTokenUrls = ["/auth/refresh-token", "/auth/logout"];
+
     if (
       error.response?.status === 401 &&
       !originalRequest._retry &&
-      originalRequest.url !== "/auth/refresh-token"
+      !refreshTokenUrls.includes(originalRequest.url)
     ) {
       originalRequest._retry = true;
 
@@ -31,6 +33,10 @@ apiClient.interceptors.response.use(
       } catch (err) {
         return Promise.reject(err);
       }
+    }
+
+    if (refreshTokenUrls.includes(error.config.url)) {
+      window.location.href = "/login";
     }
 
     return Promise.reject(error);
