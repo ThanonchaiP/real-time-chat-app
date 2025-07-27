@@ -152,9 +152,9 @@ export class RoomsService {
 
     // 2️⃣ หา chatWithIds ของทุกห้อง direct (ยกเว้น userId ตัวเอง)
     const chatWithIds = rooms
-      .filter(
-        (room) => room.type === 'direct' && room.participants.length === 2,
-      )
+      // .filter(
+      //   (room) => room.type === 'direct' && room.participants.length === 2,
+      // )
       .map((room) => room.participants.find((id: string) => id !== userId));
 
     // 3️⃣ ดึง user ทีเดียวทั้งหมด
