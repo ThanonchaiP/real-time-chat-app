@@ -21,13 +21,21 @@ export class MessagesService {
     return message.save();
   }
 
-  async findAll(paginationDto: PaginationDto): Promise<PageDto<Message>> {
+  async findAll(
+    roomId: string,
+    paginationDto: PaginationDto,
+  ): Promise<PageDto<Message>> {
     const { page = 1, limit = 10 } = paginationDto;
     const skip = (page - 1) * limit;
 
     const [messages, total] = await Promise.all([
-      this.messageModel.find().skip(skip).limit(limit).lean(),
-      this.messageModel.countDocuments(),
+      this.messageModel
+        .find({ roomId })
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .lean(),
+      this.messageModel.countDocuments({ roomId }),
     ]);
 
     const pageMetaDto = new PageMetaDto({
@@ -37,10 +45,6 @@ export class MessagesService {
     });
 
     return new PageDto(messages, pageMetaDto);
-  }
-
-  findOne(id: string) {
-    return this.messageModel.findById(id).exec();
   }
 
   update(id: string, updateMessageDto: UpdateMessageDto) {

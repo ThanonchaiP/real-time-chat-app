@@ -79,16 +79,19 @@ export class RoomsService {
     });
 
     if (!room) {
+      const user = await this.usersService.findOne(userId);
+
+      if (!user) throw new Error('User not found');
+
       const newRoom = await this.create({
         type: 'direct',
         participants: [sub, userId],
-        name: `Chat with ${userId}`,
+        name: user.name,
+        color: user.color,
         createdBy: email,
       });
 
-      if (!newRoom) {
-        throw new Error('Failed to create room');
-      }
+      if (!newRoom) throw new Error('Failed to create room');
 
       return { data: newRoom._id };
     }

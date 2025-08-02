@@ -1,4 +1,4 @@
-import { Image, Send, Smile } from "lucide-react";
+import { ImageIcon, Send, Smile } from "lucide-react";
 import { useState } from "react";
 
 import { Button } from "../ui/button";
@@ -31,7 +31,7 @@ export const MessageInput = () => {
         />
 
         <Smile className="w-5 h-5 text-blue-500 cursor-pointer" />
-        <Image className="w-5 h-5 text-blue-500 cursor-pointer" />
+        <ImageIcon className="w-5 h-5 text-blue-500 cursor-pointer" />
 
         <Button
           onClick={sendMessage}

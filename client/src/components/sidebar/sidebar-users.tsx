@@ -42,7 +42,7 @@ export const SidebarUsers = ({ userId }: SidebarUsersProps) => {
       {isLoadingRooms && <ChatSkeleton />}
       {roomData?.data?.map((room) => (
         <Link key={room._id} href={`/messages/${room._id}`} className="block">
-          <UserItem _id={room._id} color="skyblue" name={room.name} />
+          <UserItem _id={room._id} color="#4A90E2" name={room.name} isGroup />
         </Link>
       ))}
 

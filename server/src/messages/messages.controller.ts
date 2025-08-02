@@ -24,14 +24,12 @@ export class MessagesController {
     return this.messagesService.create(createMessageDto);
   }
 
-  @Get()
-  findAll(@Query() paginationDto: PaginationDto) {
-    return this.messagesService.findAll(paginationDto);
-  }
-
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.messagesService.findOne(id);
+  @Get(':roomId')
+  findAll(
+    @Param('roomId') roomId: string,
+    @Query() paginationDto: PaginationDto,
+  ) {
+    return this.messagesService.findAll(roomId, paginationDto);
   }
 
   @Patch(':id')

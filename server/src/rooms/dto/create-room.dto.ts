@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsNotEmpty } from 'class-validator';
+import { IsNotEmpty, IsOptional } from 'class-validator';
 
 export class CreateRoomDto {
   @ApiProperty()
@@ -13,6 +13,10 @@ export class CreateRoomDto {
   @ApiProperty({ type: [String] })
   @IsNotEmpty()
   participants: Array<string>;
+
+  @ApiProperty()
+  @IsOptional()
+  color: string;
 
   @ApiProperty()
   @IsNotEmpty()

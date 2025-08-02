@@ -30,7 +30,7 @@ export const useListRecent = (params: ListRecent) => {
     if (query.isError) {
       console.error("Error fetching recent rooms:", query.error);
     }
-  }, [query.error]);
+  }, [query.isError, query.error]);
 
   return query;
 };

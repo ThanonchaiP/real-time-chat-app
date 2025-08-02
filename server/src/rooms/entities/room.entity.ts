@@ -14,6 +14,9 @@ export class Room {
   @Prop({ required: true })
   participants: Array<string>;
 
+  @Prop({ required: false })
+  color: string;
+
   @Prop({ required: true })
   createdBy: string;
 }
