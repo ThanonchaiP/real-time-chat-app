@@ -1,16 +1,22 @@
-import { useInfiniteQuery } from "@tanstack/react-query";
-import { useEffect } from "react";
+import {
+  InfiniteData,
+  useInfiniteQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
+import { useCallback, useEffect } from "react";
 
 import { API_URL } from "@/constants";
 import { apiClient } from "@/lib/api-client";
 import { Request } from "@/types";
 
 import { MessageResponseSchema } from "../schemas";
-import { MessageResponse } from "../types";
+import { Message, MessageResponse } from "../types";
 
 type ListMessage = Request & {
   roomId: string;
 };
+
+type InfiniteMessageData = InfiniteData<MessageResponse>;
 
 export const listMessage = async ({
   roomId,
@@ -26,8 +32,11 @@ export const listMessage = async ({
 type UserListMessage = ListMessage;
 
 export const useListMessage = (params: UserListMessage) => {
+  const queryClient = useQueryClient();
+  const queryKey = ["messages", params.roomId];
+
   const query = useInfiniteQuery({
-    queryKey: ["messages", params.roomId],
+    queryKey,
     queryFn: ({ pageParam }) => listMessage({ ...params, page: pageParam }),
     getNextPageParam: (lastData) => {
       const lastPage = lastData?.meta?.page ?? 1;
@@ -39,15 +48,50 @@ export const useListMessage = (params: UserListMessage) => {
     initialPageParam: 1,
   });
 
-  const allRows = query.data
-    ? query.data.pages.flatMap((d) => d?.data ?? []).reverse()
-    : [];
-
   useEffect(() => {
     if (query.isError) {
       console.error("Error fetching messages:", query.error);
     }
   }, [query.isError, query.error]);
 
-  return { ...query, allRows };
+  const allRows = query.data
+    ? query.data.pages.flatMap((d) => d?.data ?? []).reverse()
+    : [];
+
+  const addMessage = useCallback(
+    (newMessage: Message) => {
+      queryClient.setQueryData<InfiniteMessageData>(queryKey, (oldData) => {
+        if (!oldData) return oldData;
+
+        return {
+          ...oldData,
+          pages: oldData.pages.map((page: MessageResponse, index: number) => {
+            if (index === 0) {
+              return {
+                ...page,
+                data: [newMessage, ...(page.data || [])],
+              };
+            }
+            return page;
+          }),
+        };
+      });
+    },
+    [queryClient, params.roomId]
+  );
+
+  useEffect(() => {
+    return () => {
+      if (queryClient.getQueryData(queryKey)) {
+        queryClient.setQueryData(queryKey, (data: InfiniteMessageData) => {
+          return {
+            pages: data.pages.slice(0, 1),
+            pageParams: data.pageParams.slice(0, 1),
+          };
+        });
+      }
+    };
+  }, []);
+
+  return { ...query, allRows, addMessage };
 };
