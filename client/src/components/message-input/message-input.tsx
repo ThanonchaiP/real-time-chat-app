@@ -97,7 +97,7 @@ export const MessageInput = ({ roomId }: MessageInputProps) => {
       if (isTypingRef.current)
         socket?.emit("typing_end", { roomId, userId: user?._id });
     };
-  }, [socket, roomId]);
+  }, [socket, roomId, user?._id]);
 
   return (
     <div className="bg-white border-t border-gray-200 px-4 py-3">

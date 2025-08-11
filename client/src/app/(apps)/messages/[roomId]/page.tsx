@@ -42,7 +42,7 @@ export default function RoomPage({ params }: RoomPageProps) {
       socket.off("new_message", handleNewMessage);
       socket.emit("leave_room", { roomId });
     };
-  }, [socket, roomId, roomData]);
+  }, [socket, roomId, roomData, addMessage]);
 
   return (
     <div className="flex-1 flex flex-col h-full">

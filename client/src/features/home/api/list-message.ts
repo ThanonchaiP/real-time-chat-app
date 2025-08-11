@@ -3,7 +3,7 @@ import {
   useInfiniteQuery,
   useQueryClient,
 } from "@tanstack/react-query";
-import { useCallback, useEffect } from "react";
+import { useCallback, useEffect, useMemo } from "react";
 
 import { API_URL } from "@/constants";
 import { apiClient } from "@/lib/api-client";
@@ -33,7 +33,7 @@ type UserListMessage = ListMessage;
 
 export const useListMessage = (params: UserListMessage) => {
   const queryClient = useQueryClient();
-  const queryKey = ["messages", params.roomId];
+  const queryKey = useMemo(() => ["messages", params.roomId], [params.roomId]);
 
   const query = useInfiniteQuery({
     queryKey,
@@ -77,7 +77,7 @@ export const useListMessage = (params: UserListMessage) => {
         };
       });
     },
-    [queryClient, params.roomId]
+    [queryClient, queryKey]
   );
 
   useEffect(() => {
@@ -91,7 +91,7 @@ export const useListMessage = (params: UserListMessage) => {
         });
       }
     };
-  }, []);
+  }, [queryClient, queryKey]);
 
   return { ...query, allRows, addMessage };
 };

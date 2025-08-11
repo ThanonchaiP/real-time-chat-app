@@ -62,7 +62,7 @@ export const MessageContent = ({
 
   useEffect(() => {
     isInitialized.current = false;
-  }, [messages.length === 0]);
+  }, [messages.length]);
 
   const handleScroll = useCallback(
     (offset: number) => {
