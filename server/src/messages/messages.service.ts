@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { Model, Types } from 'mongoose';
 
 import { PaginationDto } from '@/common/dtos/pagination.dto';
 import { PageMetaDto } from '@/common/dtos/page-meta.dto';
@@ -57,5 +57,38 @@ export class MessagesService {
 
   getLastMessage(roomId: string) {
     return this.messageModel.findOne({ roomId }).sort({ createdAt: -1 }).exec();
+  }
+
+  async markAsRead(messageId: string, userId: string) {
+    const message = await this.messageModel.findById(messageId);
+
+    if (!message) {
+      throw new Error('Message not found');
+    }
+
+    // Check if this user already marked the message as read
+    const alreadyRead = message.readBy.some(
+      (receipt) => JSON.stringify(receipt.userId) === userId,
+    );
+
+    if (!alreadyRead) {
+      return this.messageModel
+        .findByIdAndUpdate(
+          messageId,
+          {
+            $push: {
+              readBy: {
+                userId: new Types.ObjectId(userId),
+                readAt: new Date(),
+              },
+            },
+            status: 'read',
+          },
+          { new: true },
+        )
+        .exec();
+    }
+
+    return message;
   }
 }

@@ -1,26 +1,62 @@
 "use client";
 
-import { use } from "react";
+import { use, useEffect } from "react";
 
+import { FallbackError } from "@/components/fallback-error";
 import { MessageContent } from "@/components/message-content";
 import { MessageHeader } from "@/components/message-header";
 import { MessageInput } from "@/components/message-input";
-import { useGetRoom } from "@/features/home";
+import { Message } from "@/features/home/types";
+import { useGetRoom, useListMessage } from "@/features/home";
+import { useUser } from "@/hooks";
 
-export default function RoomPage({
-  params,
-}: {
+interface RoomPageProps {
   params: Promise<{ roomId: string }>;
-}) {
-  const { roomId } = use(params);
+}
 
-  const { data } = useGetRoom({ roomId });
+export default function RoomPage({ params }: RoomPageProps) {
+  const { roomId } = use(params);
+  const { socket } = useUser();
+
+  const { data: roomData, isError } = useGetRoom({ roomId });
+  const {
+    allRows,
+    addMessage,
+    fetchNextPage,
+    hasNextPage,
+    isLoading,
+    isFetchingNextPage,
+  } = useListMessage({ roomId, limit: 25 });
+
+  useEffect(() => {
+    if (!roomData || !socket || !roomId) return;
+
+    const handleNewMessage = (message: Message) => {
+      addMessage(message);
+    };
+
+    socket.emit("join_room", { roomId });
+    socket.on("new_message", handleNewMessage);
+
+    return () => {
+      socket.off("new_message", handleNewMessage);
+      socket.emit("leave_room", { roomId });
+    };
+  }, [socket, roomId, roomData]);
 
   return (
     <div className="flex-1 flex flex-col h-full">
-      <MessageHeader name={data?.name ?? ""} color={data?.color} />
-      <MessageContent roomId={roomId} />
-      <MessageInput />
+      <FallbackError isError={isError} className="mt-6">
+        <MessageHeader name={roomData?.name ?? ""} color={roomData?.color} />
+        <MessageContent
+          messages={allRows}
+          hasNextPage={hasNextPage}
+          isLoading={isLoading}
+          isFetchingNextPage={isFetchingNextPage}
+          fetchNextPage={fetchNextPage}
+        />
+        <MessageInput roomId={roomId} />
+      </FallbackError>
     </div>
   );
 }
