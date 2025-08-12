@@ -1,13 +1,11 @@
-import dayjs from "dayjs";
 import { useEffect, useLayoutEffect, useRef, useCallback } from "react";
 import { VList, VListHandle } from "virtua";
 
 import { Message } from "@/features/home/types";
 import { useUser } from "@/hooks";
 import { cn } from "@/lib/utils";
-import { getAvatarName } from "@/utils";
 
-import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
+import { MessageItem } from "../message-item";
 import { Spinner } from "../ui/spinner";
 
 interface MessageContentProps {
@@ -111,47 +109,7 @@ export const MessageContent = ({
         onScroll={handleScroll}
       >
         {messages.map((message) => (
-          <div
-            className={cn(
-              "flex items-end gap-2 py-2",
-              message.senderId === userId ? "justify-end" : "justify-start"
-            )}
-            key={message._id}
-          >
-            <Avatar
-              className={cn(
-                "size-[35px]",
-                message.senderId === userId ? "order-2" : "order-1"
-              )}
-            >
-              <AvatarImage src="" />
-              <AvatarFallback
-                className="text-white"
-                style={{ backgroundColor: "#4A90E2" }}
-              >
-                {getAvatarName("Non")}
-              </AvatarFallback>
-            </Avatar>
-            <div
-              className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
-                message.senderId === userId
-                  ? "bg-blue-500 text-white order-1"
-                  : "bg-[#F5F7FB] text-gray-800 order-2"
-              }`}
-            >
-              <p className="text-base">{message.content}</p>
-              <p
-                className={cn(
-                  "text-xs mt-1",
-                  message.senderId === userId
-                    ? "text-blue-100"
-                    : "text-right text-gray-500"
-                )}
-              >
-                {dayjs(message.createdAt).format("HH:mm")}
-              </p>
-            </div>
-          </div>
+          <MessageItem key={message._id} message={message} userId={userId} />
         ))}
       </VList>
     </div>

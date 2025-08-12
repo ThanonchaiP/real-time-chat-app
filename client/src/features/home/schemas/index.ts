@@ -28,7 +28,11 @@ export const RoomRecentSchema = RoomSchema.extend({
 export const MessageSchema = z.object({
   _id: z.string(),
   roomId: z.string(),
-  senderId: z.string(),
+  sender: z.object({
+    _id: z.string(),
+    name: z.string(),
+    color: z.string(),
+  }),
   content: z.string(),
   contentType: z.string(),
   attachments: z.array(z.unknown()),

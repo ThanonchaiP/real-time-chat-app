@@ -29,12 +29,23 @@ export class MessagesService {
     const skip = (page - 1) * limit;
 
     const [messages, total] = await Promise.all([
-      this.messageModel
-        .find({ roomId })
-        .sort({ createdAt: -1 })
-        .skip(skip)
-        .limit(limit)
-        .lean(),
+      this.messageModel.aggregate([
+        { $match: { roomId: new Types.ObjectId(roomId) } },
+        { $sort: { createdAt: -1 } },
+        { $skip: skip },
+        { $limit: limit },
+        {
+          $lookup: {
+            from: 'users',
+            localField: 'senderId',
+            foreignField: '_id',
+            as: 'sender',
+            pipeline: [{ $project: { name: 1, color: 1 } }],
+          },
+        },
+        { $unwind: '$sender' },
+        { $project: { senderId: 0 } },
+      ]),
       this.messageModel.countDocuments({ roomId }),
     ]);
 
