@@ -13,11 +13,20 @@ import {
 import { Server, Socket } from 'socket.io';
 
 import { TokenPayload } from '@/types';
+import { UsersService } from '@/users/users.service';
 import { parseCookies } from '@/utils';
 
 import { CreateMessageDto } from './dto/create-message.dto';
 import { Message } from './entities/message.entity';
 import { MessagesService } from './messages.service';
+
+interface NewMessage extends Message {
+  sender: {
+    _id: string;
+    name: string;
+    color: string;
+  };
+}
 
 @WebSocketGateway({
   cors: { origin: 'http://localhost:3000', credentials: true },
@@ -30,6 +39,7 @@ export class MessageGateway
 
   constructor(
     private readonly messagesService: MessagesService,
+    private readonly usersService: UsersService,
     private readonly jwtService: JwtService,
   ) {}
 
@@ -108,10 +118,20 @@ export class MessageGateway
       }
 
       // Create the message
-      const message = await this.messagesService.create(createMessageDto);
+      const [message, user] = await Promise.all([
+        this.messagesService.create(createMessageDto),
+        this.usersService.findOne(createMessageDto.senderId),
+      ]);
+
+      const sender = {
+        _id: user._id.toString(),
+        name: user.name,
+        color: user.color,
+      };
+      const newMessage = { sender, ...message.toObject() };
 
       // Broadcast to the room
-      this.broadcastNewMessage(createMessageDto.roomId, message);
+      this.broadcastNewMessage(createMessageDto.roomId, newMessage);
 
       return { event: 'message_sent', data: message };
     } catch (error) {
@@ -169,7 +189,7 @@ export class MessageGateway
     );
   }
 
-  broadcastNewMessage(roomId: string, message: Message) {
+  broadcastNewMessage(roomId: string, message: NewMessage) {
     this.server.to(`room:${roomId}`).emit('new_message', message);
   }
 }
