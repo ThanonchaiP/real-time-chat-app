@@ -8,10 +8,10 @@ import {
   UseGuards,
   Query,
 } from '@nestjs/common';
-import { AuthGuard } from '@nestjs/passport';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 
 import { PaginationDto } from '@/common/dtos/pagination.dto';
+import { JwtCookieAuthGuard } from '@/common/guards/jwt-cookie.guard';
 
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
@@ -27,22 +27,27 @@ export class UsersController {
     return this.usersService.create(createUserDto);
   }
 
+  @UseGuards(JwtCookieAuthGuard)
   @Get()
-  // @UseGuards(AuthGuard('jwt'))
-  // @ApiBearerAuth('access-token')
   findAll(@Query() paginationDto: PaginationDto) {
     return this.usersService.findAll(paginationDto);
   }
 
+  @UseGuards(JwtCookieAuthGuard)
+  @Get('/online')
+  findOnlineUsers() {
+    return this.usersService.getOnlineUsers();
+  }
+
+  @UseGuards(JwtCookieAuthGuard)
   @Get(':id')
-  @UseGuards(AuthGuard('jwt'))
   @ApiBearerAuth('access-token')
   findOne(@Param('id') id: string) {
     return this.usersService.findOne(id);
   }
 
+  @UseGuards(JwtCookieAuthGuard)
   @Patch(':id')
-  @UseGuards(AuthGuard('jwt'))
   @ApiBearerAuth('access-token')
   update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
     return this.usersService.update(id, updateUserDto);

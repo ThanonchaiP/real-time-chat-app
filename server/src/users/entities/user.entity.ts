@@ -17,6 +17,9 @@ export class User {
   @Prop()
   color: string;
 
+  @Prop({ enum: ['online', 'offline'], default: 'offline' })
+  status: 'online' | 'offline';
+
   @Prop({ default: null })
   refreshToken: string;
 }

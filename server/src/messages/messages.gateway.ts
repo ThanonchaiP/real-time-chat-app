@@ -78,12 +78,14 @@ export class MessageGateway
   async handleConnection(client: Socket) {
     try {
       // Handle user connection
-      const userId = client.handshake.auth.userId;
+      const userId = client.handshake.auth.userId as string;
       if (!userId) {
         throw new WsException('User ID not provided');
       }
 
-      // Join user's personal room for direct messages
+      // อัพเดท status ใน database
+      await this.usersService.updateUserStatus(userId, 'online');
+
       await client.join(`user:${userId}`);
 
       // Emit user online status
@@ -96,13 +98,16 @@ export class MessageGateway
     }
   }
 
-  handleDisconnect(client: Socket) {
-    const userId = client.handshake.auth.userId;
-    if (userId) {
-      // Emit user offline status
-      this.server.emit('user_status_change', { userId, status: 'offline' });
-      console.log(`User ${userId} disconnected`);
+  async handleDisconnect(client: Socket) {
+    const userId = client.handshake.auth.userId as string;
+
+    if (!userId) {
+      throw new WsException('User ID not provided');
     }
+
+    await this.usersService.updateUserStatus(userId, 'offline');
+    this.server.emit('user_status_change', { userId, status: 'offline' });
+    console.log(`User ${userId} disconnected`);
   }
 
   @SubscribeMessage('new_message')

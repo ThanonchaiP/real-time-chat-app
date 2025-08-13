@@ -111,4 +111,23 @@ export class UsersService {
   async findManyByIds(ids: string[]) {
     return this.userModel.find({ _id: { $in: ids } }).lean();
   }
+
+  async updateUserStatus(userId: string, status: 'online' | 'offline') {
+    return this.userModel.findByIdAndUpdate(userId, { status }, { new: true });
+  }
+
+  async getOnlineUsers() {
+    const users = await this.userModel
+      .find({ status: 'online' })
+      .select('_id status')
+      .lean();
+
+    return users.reduce(
+      (acc, user) => {
+        acc[user._id.toString()] = user.status;
+        return acc;
+      },
+      {} as Record<string, 'online' | 'offline'>,
+    );
+  }
 }
