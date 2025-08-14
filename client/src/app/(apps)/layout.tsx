@@ -23,7 +23,7 @@ const AppsLayout = ({ children }: { children: React.ReactNode }) => {
   useEffect(() => {
     if (!onlineUsers.data) return;
     setUserOnline(onlineUsers.data);
-  }, [onlineUsers.data]);
+  }, [onlineUsers.data, setUserOnline]);
 
   useEffect(() => {
     if (!socket) return;
@@ -37,7 +37,7 @@ const AppsLayout = ({ children }: { children: React.ReactNode }) => {
     return () => {
       socket.off("user_status_change", handleStatusChange);
     };
-  }, [socket]);
+  }, [socket, setStatusChange]);
 
   return (
     <UserProvider>

@@ -72,3 +72,5 @@ export const MessageItem = memo(({ message, userId }: MessageItemProps) => {
     </div>
   );
 });
+
+MessageItem.displayName = "MessageItem";

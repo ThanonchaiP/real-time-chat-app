@@ -1,26 +1,25 @@
 "use client";
 
-import { use, useEffect } from "react";
+import { use } from "react";
 
 import { FallbackError } from "@/components/fallback-error";
 import { MessageContent } from "@/components/message-content";
 import { MessageHeader } from "@/components/message-header";
 import { MessageInput } from "@/components/message-input";
-import { Message } from "@/features/home/types";
 import { useGetRoom, useListMessage } from "@/features/home";
-import { useChatStore } from "@/stores/user-store";
+import { useSocketHandler, useUser, useUserStatus } from "@/hooks";
 
 interface RoomPageProps {
   params: Promise<{ roomId: string }>;
 }
 
 export default function RoomPage({ params }: RoomPageProps) {
+  const { user } = useUser();
   const { roomId } = use(params);
-  const socket = useChatStore((state) => state.socket);
 
   const { data: roomData, isError } = useGetRoom({ roomId });
   const {
-    allRows,
+    allRows: messages,
     addMessage,
     fetchNextPage,
     hasNextPage,
@@ -28,21 +27,8 @@ export default function RoomPage({ params }: RoomPageProps) {
     isFetchingNextPage,
   } = useListMessage({ roomId, limit: 25 });
 
-  useEffect(() => {
-    if (!roomData || !socket || !roomId) return;
-
-    const handleNewMessage = (message: Message) => {
-      addMessage(message);
-    };
-
-    socket.emit("join_room", { roomId });
-    socket.on("new_message", handleNewMessage);
-
-    return () => {
-      socket.off("new_message", handleNewMessage);
-      socket.emit("leave_room", { roomId });
-    };
-  }, [socket, roomId, roomData, addMessage]);
+  const userStatus = useUserStatus(roomData, user?._id);
+  useSocketHandler(roomId, addMessage);
 
   return (
     <div className="flex-1 flex flex-col h-full">
@@ -50,10 +36,10 @@ export default function RoomPage({ params }: RoomPageProps) {
         <MessageHeader
           name={roomData?.name ?? ""}
           color={roomData?.color}
-          isOnline={true}
+          isOnline={userStatus === "online"}
         />
         <MessageContent
-          messages={allRows}
+          messages={messages}
           hasNextPage={hasNextPage}
           isLoading={isLoading}
           isFetchingNextPage={isFetchingNextPage}

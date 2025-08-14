@@ -43,7 +43,7 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
 
     setUser(data);
     setSocket(socketInstance);
-  }, [data]);
+  }, [data, setSocket]);
 
   if (isLoading) return <Loader />;
 
