@@ -36,7 +36,8 @@
     "sonner": "^2.0.5",
     "tailwind-merge": "^3.3.0",
     "virtua": "^0.41.5",
-    "zod": "^3.25.42"
+    "zod": "^3.25.42",
+    "zustand": "^5.0.7"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",

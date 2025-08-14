@@ -2,12 +2,13 @@
 
 import { createContext, ReactNode, useEffect, useState } from "react";
 import { io, Socket } from "socket.io-client";
+import { useShallow } from "zustand/react/shallow";
 
 import { useGetMe, User } from "@/features/auth";
+import { useChatStore } from "@/stores/user-store";
 
 type UserContext = {
   user: User | null;
-  socket: Socket | null;
   setUser: (user: User) => void;
   logout: () => void;
 };
@@ -16,9 +17,14 @@ export const UserContext = createContext<UserContext | undefined>(undefined);
 
 export const UserProvider = ({ children }: { children: ReactNode }) => {
   const { data, isLoading } = useGetMe();
+  const { socket, setSocket } = useChatStore(
+    useShallow((s) => ({
+      socket: s.socket,
+      setSocket: s.setSocket,
+    }))
+  );
 
   const [user, setUser] = useState<User | null>(null);
-  const [socket, setSocket] = useState<Socket | null>(null);
 
   const logout = () => {
     setUser(null);
@@ -42,7 +48,7 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
   if (isLoading) return <Loader />;
 
   return (
-    <UserContext.Provider value={{ user, socket, setUser, logout }}>
+    <UserContext.Provider value={{ user, setUser, logout }}>
       {children}
     </UserContext.Provider>
   );

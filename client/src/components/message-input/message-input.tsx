@@ -2,6 +2,7 @@ import { ImageIcon, Send, Smile } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
 import { useUser } from "@/hooks";
+import { useChatStore } from "@/stores/user-store";
 
 import { Button } from "../ui/button";
 import { LoadingSpinner } from "../ui/spinner";
@@ -11,7 +12,8 @@ interface MessageInputProps {
 }
 
 export const MessageInput = ({ roomId }: MessageInputProps) => {
-  const { socket, user } = useUser();
+  const { user } = useUser();
+  const socket = useChatStore((state) => state.socket);
 
   const isTypingRef = useRef(false);
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);

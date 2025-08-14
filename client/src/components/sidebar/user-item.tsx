@@ -12,6 +12,7 @@ interface UserItemProps {
   name: string;
   _id: string;
   isGroup?: boolean;
+  isOnline?: boolean;
 }
 
 export const UserItem = ({
@@ -19,6 +20,7 @@ export const UserItem = ({
   name,
   _id,
   isGroup = false,
+  isOnline = false,
 }: UserItemProps) => {
   const router = useRouter();
   const params = useParams();
@@ -54,7 +56,7 @@ export const UserItem = ({
       onClick={handleUserClick}
     >
       <div className="relative">
-        <Avatar className="size-[35px]">
+        <Avatar className="relative size-[35px] overflow-visible">
           <AvatarImage src="" />
           <AvatarFallback
             className="text-white"
@@ -62,6 +64,9 @@ export const UserItem = ({
           >
             {getAvatarName(name)}
           </AvatarFallback>
+          {isOnline && (
+            <span className="absolute bottom-[1px] right-[0px] bg-green-500 border-[2px] border-white size-[10px] rounded-full"></span>
+          )}
         </Avatar>
       </div>
 

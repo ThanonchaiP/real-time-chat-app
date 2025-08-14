@@ -3,6 +3,7 @@ import { useState } from "react";
 import SimpleBar from "simplebar-react";
 
 import { useListRoom, useListUser } from "@/features/home";
+import { useChatStore } from "@/stores/user-store";
 
 import { SearchInput } from "../search-input";
 
@@ -20,6 +21,8 @@ export const SidebarUsers = ({ userId }: SidebarUsersProps) => {
   const { data: roomData, isLoading: isLoadingRooms } = useListRoom({
     type: "group",
   });
+
+  const userOnline = useChatStore((state) => state.userOnline);
 
   const [search, setSearch] = useState("");
 
@@ -57,7 +60,13 @@ export const SidebarUsers = ({ userId }: SidebarUsersProps) => {
           {dataSource.map((user) => {
             if (user._id === userId) return null;
 
-            return <UserItem key={user._id} {...user} />;
+            return (
+              <UserItem
+                {...user}
+                key={user._id}
+                isOnline={userOnline?.[user._id] === "online"}
+              />
+            );
           })}
         </ul>
       </SimpleBar>

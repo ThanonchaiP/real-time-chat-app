@@ -17,3 +17,8 @@ export type RoomRecent = z.infer<typeof RoomRecentSchema>;
 export type Message = z.infer<typeof MessageSchema>;
 
 export type MessageResponse = z.infer<typeof MessageResponseSchema>;
+
+export type UserStatus = {
+  userId: string;
+  status: string;
+};

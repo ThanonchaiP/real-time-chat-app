@@ -8,7 +8,7 @@ import { MessageHeader } from "@/components/message-header";
 import { MessageInput } from "@/components/message-input";
 import { Message } from "@/features/home/types";
 import { useGetRoom, useListMessage } from "@/features/home";
-import { useUser } from "@/hooks";
+import { useChatStore } from "@/stores/user-store";
 
 interface RoomPageProps {
   params: Promise<{ roomId: string }>;
@@ -16,7 +16,7 @@ interface RoomPageProps {
 
 export default function RoomPage({ params }: RoomPageProps) {
   const { roomId } = use(params);
-  const { socket } = useUser();
+  const socket = useChatStore((state) => state.socket);
 
   const { data: roomData, isError } = useGetRoom({ roomId });
   const {
@@ -47,7 +47,11 @@ export default function RoomPage({ params }: RoomPageProps) {
   return (
     <div className="flex-1 flex flex-col h-full">
       <FallbackError isError={isError} className="mt-6">
-        <MessageHeader name={roomData?.name ?? ""} color={roomData?.color} />
+        <MessageHeader
+          name={roomData?.name ?? ""}
+          color={roomData?.color}
+          isOnline={true}
+        />
         <MessageContent
           messages={allRows}
           hasNextPage={hasNextPage}
