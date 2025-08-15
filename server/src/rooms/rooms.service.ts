@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable @typescript-eslint/no-unsafe-return */
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { InjectModel } from '@nestjs/mongoose';
@@ -154,11 +156,9 @@ export class RoomsService {
     ]);
 
     // 2️⃣ หา chatWithIds ของทุกห้อง direct (ยกเว้น userId ตัวเอง)
-    const chatWithIds = rooms
-      // .filter(
-      //   (room) => room.type === 'direct' && room.participants.length === 2,
-      // )
-      .map((room) => room.participants.find((id: string) => id !== userId));
+    const chatWithIds = rooms.map((room: { participants: string[] }) =>
+      room.participants.find((id: string) => id !== userId),
+    ) as string[];
 
     // 3️⃣ ดึง user ทีเดียวทั้งหมด
     const users = await this.usersService.findManyByIds(chatWithIds);
@@ -172,7 +172,7 @@ export class RoomsService {
         const chatWithId = room.participants.find(
           (id: string) => id !== userId,
         );
-        const chatWithUser = userMap.get(chatWithId?.toString());
+        const chatWithUser = userMap.get(chatWithId?.toString() as string);
         return {
           ...room,
           name: chatWithUser?.name ?? 'Unknown',

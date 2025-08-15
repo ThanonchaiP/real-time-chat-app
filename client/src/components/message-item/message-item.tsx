@@ -1,3 +1,4 @@
+import relativeTime from "dayjs/plugin/relativeTime";
 import dayjs from "dayjs";
 import { memo } from "react";
 
@@ -7,6 +8,8 @@ import { getAvatarName } from "@/utils";
 
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip";
+
+dayjs.extend(relativeTime);
 
 interface MessageItemProps {
   userId: string;

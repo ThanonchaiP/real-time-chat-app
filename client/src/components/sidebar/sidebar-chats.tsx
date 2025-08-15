@@ -2,6 +2,7 @@ import { useParams, useRouter } from "next/navigation";
 import SimpleBar from "simplebar-react";
 
 import { useListRecent } from "@/features/home";
+import { useChatStore } from "@/stores/user-store";
 
 import { SearchInput } from "../search-input";
 
@@ -17,6 +18,8 @@ type SidebarChatsProps = {
 export const SidebarChats = ({ userId }: SidebarChatsProps) => {
   const router = useRouter();
   const params = useParams();
+
+  const userOnline = useChatStore((state) => state.userOnline);
 
   const { data, isLoading } = useListRecent({ userId });
 
@@ -47,9 +50,11 @@ export const SidebarChats = ({ userId }: SidebarChatsProps) => {
           <ChatItem
             typing={false}
             data={room}
+            color={room.color}
             key={room._id}
             onClick={handleChatClick}
             isActive={roomId === room._id}
+            isOnline={userOnline[room.chatWithId ?? ""] === "online"}
           />
         ))}
       </SimpleBar>

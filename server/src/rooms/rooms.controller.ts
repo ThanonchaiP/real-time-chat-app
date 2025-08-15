@@ -18,6 +18,7 @@ import { RoomQueryParamDto } from './dto/room-query-param.dto';
 import { UpdateRoomDto } from './dto/update-room.dto';
 import { RoomsService } from './rooms.service';
 
+@UseGuards(JwtCookieAuthGuard)
 @Controller('rooms')
 export class RoomsController {
   constructor(private readonly roomsService: RoomsService) {}
@@ -37,10 +38,9 @@ export class RoomsController {
     return this.roomsService.findOne(id);
   }
 
-  @UseGuards(JwtCookieAuthGuard)
   @Get('user/:userId')
   findRoomByUserId(@Param('userId') userId: string, @Req() req: Request) {
-    const token = req.cookies['access_token'];
+    const token = req.cookies['access_token'] as string;
     return this.roomsService.findRoomByUserId(userId, token);
   }
 
@@ -54,7 +54,6 @@ export class RoomsController {
     return this.roomsService.remove(id);
   }
 
-  @UseGuards(JwtCookieAuthGuard)
   @Get('recent/:userId')
   getRecentMessage(@Param('userId') userId: string) {
     return this.roomsService.getRecentMessage(userId);

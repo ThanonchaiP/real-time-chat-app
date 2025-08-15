@@ -1,5 +1,9 @@
+import relativeTime from "dayjs/plugin/relativeTime";
+import isSameOrAfter from "dayjs/plugin/isSameOrAfter";
+import isSameOrBefore from "dayjs/plugin/isSameOrBefore";
 import { useEffect, useLayoutEffect, useRef, useCallback } from "react";
 import { VList, VListHandle } from "virtua";
+import dayjs from "dayjs";
 
 import { Message } from "@/features/home/types";
 import { useUser } from "@/hooks";
@@ -7,6 +11,13 @@ import { cn } from "@/lib/utils";
 
 import { MessageItem } from "../message-item";
 import { Spinner } from "../ui/spinner";
+
+import "dayjs/locale/th";
+
+dayjs.extend(relativeTime);
+dayjs.extend(isSameOrAfter);
+dayjs.extend(isSameOrBefore);
+dayjs.locale("th");
 
 interface MessageContentProps {
   messages: Message[];
@@ -108,9 +119,40 @@ export const MessageContent = ({
         shift={isPrepend.current}
         onScroll={handleScroll}
       >
-        {messages.map((message) => (
-          <MessageItem key={message._id} message={message} userId={userId} />
-        ))}
+        {messages.map((message, index) => {
+          const currentDate = dayjs(message.createdAt);
+          const previousDate =
+            index > 0 ? dayjs(messages[index - 1].createdAt) : null;
+
+          const shouldShowDate =
+            !previousDate || !currentDate.isSame(previousDate, "day");
+
+          const formatDate = (date: dayjs.Dayjs) => {
+            const today = dayjs();
+            const yesterday = today.subtract(1, "day");
+
+            if (date.isSame(today, "day")) {
+              return "วันนี้";
+            } else if (date.isSame(yesterday, "day")) {
+              return "เมื่อวาน";
+            } else {
+              return date.format("dddd, D MMMM YYYY");
+            }
+          };
+
+          return (
+            <div key={message._id}>
+              {shouldShowDate && (
+                <div className="flex justify-center my-4">
+                  <span className="text-xs text-gray-500 bg-gray-100 px-3 py-1 rounded-full">
+                    {formatDate(currentDate)}
+                  </span>
+                </div>
+              )}
+              <MessageItem message={message} userId={userId} />
+            </div>
+          );
+        })}
       </VList>
     </div>
   );

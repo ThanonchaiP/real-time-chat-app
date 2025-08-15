@@ -13,10 +13,19 @@ interface Chat {
   data: RoomRecent;
   typing: boolean;
   isActive?: boolean;
+  color?: string;
+  isOnline?: boolean;
   onClick?: (id: string) => void;
 }
 
-export const ChatItem = ({ data, typing, isActive = false, onClick }: Chat) => {
+export const ChatItem = ({
+  data,
+  typing,
+  isActive = false,
+  color = "#4A90E2",
+  isOnline = false,
+  onClick,
+}: Chat) => {
   return (
     <div
       className={cn(
@@ -26,11 +35,17 @@ export const ChatItem = ({ data, typing, isActive = false, onClick }: Chat) => {
       onClick={() => onClick?.(data._id)}
     >
       <div className="relative">
-        <Avatar className="size-[35px]">
+        <Avatar className="relative size-[35px] overflow-visible">
           <AvatarImage src="" />
-          <AvatarFallback className="bg-amber-700 text-white">
+          <AvatarFallback
+            className="text-white"
+            style={{ backgroundColor: color }}
+          >
             {getAvatarName(data.name)}
           </AvatarFallback>
+          {isOnline && (
+            <span className="absolute bottom-[1px] right-[0px] bg-green-500 border-[2px] border-white size-[10px] rounded-full"></span>
+          )}
         </Avatar>
 
         {typing && (
