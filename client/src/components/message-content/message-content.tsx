@@ -144,7 +144,7 @@ export const MessageContent = ({
             <div key={message._id}>
               {shouldShowDate && (
                 <div className="flex justify-center my-4">
-                  <span className="text-xs text-gray-500 bg-gray-100 px-3 py-1 rounded-full">
+                  <span className="text-xs font-medium text-gray-500 bg-gray-100 px-3 py-1 rounded-full">
                     {formatDate(currentDate)}
                   </span>
                 </div>
