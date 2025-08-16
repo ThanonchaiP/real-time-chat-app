@@ -7,11 +7,31 @@ import { MessageContent } from "@/components/message-content";
 import { MessageHeader } from "@/components/message-header";
 import { MessageInput } from "@/components/message-input";
 import { useGetRoom, useListMessage } from "@/features/home";
-import { useSocketHandler, useUser, useUserStatus } from "@/hooks";
+import {
+  useSocketHandler,
+  useUser,
+  useUserStatus,
+  useTypingUsers,
+} from "@/hooks";
 
 interface RoomPageProps {
   params: Promise<{ roomId: string }>;
 }
+
+const typingMessage = {
+  _id: "typing-indicator",
+  roomId: "",
+  sender: { _id: "", name: "", color: "" },
+  content: "กำลังพิมพ์",
+  contentType: "text",
+  attachments: [],
+  status: "typing",
+  isEdited: false,
+  readBy: [],
+  reactions: [],
+  createdAt: "",
+  updatedAt: "",
+};
 
 export default function RoomPage({ params }: RoomPageProps) {
   const { user } = useUser();
@@ -30,6 +50,9 @@ export default function RoomPage({ params }: RoomPageProps) {
   const userStatus = useUserStatus(roomData, user?._id);
   useSocketHandler(roomId, addMessage);
 
+  const typingUserIds = useTypingUsers(roomId);
+  const isTyping = typingUserIds.length > 0;
+
   return (
     <div className="flex-1 flex flex-col h-full">
       <FallbackError isError={isError} className="mt-6">
@@ -39,7 +62,7 @@ export default function RoomPage({ params }: RoomPageProps) {
           isOnline={userStatus === "online"}
         />
         <MessageContent
-          messages={messages}
+          messages={isTyping ? [...messages, typingMessage] : messages}
           hasNextPage={hasNextPage}
           isLoading={isLoading}
           isFetchingNextPage={isFetchingNextPage}

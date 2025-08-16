@@ -10,6 +10,7 @@ import { useUser } from "@/hooks";
 import { cn } from "@/lib/utils";
 
 import { MessageItem } from "../message-item";
+import { TypingIndicator } from "../typing-indicator";
 import { Spinner } from "../ui/spinner";
 
 import "dayjs/locale/th";
@@ -120,6 +121,10 @@ export const MessageContent = ({
         onScroll={handleScroll}
       >
         {messages.map((message, index) => {
+          if (message.status === "typing") {
+            return <TypingIndicator key={message._id} />;
+          }
+
           const currentDate = dayjs(message.createdAt);
           const previousDate =
             index > 0 ? dayjs(messages[index - 1].createdAt) : null;
