@@ -1,7 +1,8 @@
 import { useParams, useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 import SimpleBar from "simplebar-react";
 
-import { useListRecent } from "@/features/home";
+import { Message, useListRecent } from "@/features/home";
 import { useChatStore } from "@/stores/user-store";
 
 import { SearchInput } from "../search-input";
@@ -18,10 +19,68 @@ type SidebarChatsProps = {
 export const SidebarChats = ({ userId }: SidebarChatsProps) => {
   const router = useRouter();
   const params = useParams();
+  const socket = useChatStore((state) => state.socket);
 
   const userOnline = useChatStore((state) => state.userOnline);
+  const { data, isLoading, mutate } = useListRecent({ userId });
 
-  const { data, isLoading } = useListRecent({ userId });
+  const [typingUsers, setTypingUsers] = useState<Record<string, boolean>>({});
+
+  useEffect(() => {
+    if (!socket) return;
+
+    const handleUserTyping = ({ roomId }: { roomId: string }) => {
+      setTypingUsers((prev) => ({ ...prev, [roomId]: true }));
+    };
+
+    const handleUserTypingEnd = ({ roomId }: { roomId: string }) => {
+      setTypingUsers((prev) => ({ ...prev, [roomId]: false }));
+    };
+
+    const handleNewMessage = (message: Message) => {
+      mutate((currentData) => {
+        return currentData
+          .map((room) => {
+            if (room._id === message.roomId) {
+              return {
+                ...room,
+                lastMessage: {
+                  _id: message._id,
+                  content: message.content,
+                  createdAt: message.createdAt,
+                  contentType: message.contentType,
+                  senderId: message.sender._id,
+                },
+              };
+            }
+            return room;
+          })
+          .sort(
+            (a, b) =>
+              new Date(b.lastMessage.createdAt).getTime() -
+              new Date(a.lastMessage.createdAt).getTime()
+          );
+      }, false);
+    };
+
+    socket.on("user_typing", handleUserTyping);
+    socket.on("user_typing_end", handleUserTypingEnd);
+    socket.on("new_message", handleNewMessage);
+
+    return () => {
+      socket.off("user_typing", handleUserTyping);
+      socket.off("user_typing_end", handleUserTypingEnd);
+      socket.off("new_message", handleNewMessage);
+    };
+  }, [socket, mutate]);
+
+  useEffect(() => {
+    if (!data || !socket) return;
+
+    data.forEach((room) => {
+      socket.emit("join_room", { roomId: room._id });
+    });
+  }, [data, socket]);
 
   const roomId = params.roomId as string;
 
@@ -48,7 +107,7 @@ export const SidebarChats = ({ userId }: SidebarChatsProps) => {
 
         {data?.map((room) => (
           <ChatItem
-            typing={false}
+            typing={typingUsers[room._id] || false}
             data={room}
             color={room.color}
             key={room._id}

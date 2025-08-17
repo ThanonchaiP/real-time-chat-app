@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect } from "react";
 import { z } from "zod";
 
@@ -20,6 +20,8 @@ export const listRecent = async (params: ListRecent): Promise<RoomRecent[]> => {
 };
 
 export const useListRecent = (params: ListRecent) => {
+  const queryClient = useQueryClient();
+
   const query = useQuery({
     queryKey: ["room-recent", params],
     queryFn: () => listRecent(params),
@@ -32,5 +34,24 @@ export const useListRecent = (params: ListRecent) => {
     }
   }, [query.isError, query.error]);
 
-  return query;
+  const mutate = (
+    updater: (currentData: RoomRecent[]) => RoomRecent[],
+    shouldRevalidate = true
+  ) => {
+    const currentData = queryClient.getQueryData<RoomRecent[]>([
+      "room-recent",
+      params,
+    ]);
+
+    if (currentData) {
+      queryClient.setQueryData(["room-recent", params], updater(currentData));
+
+      if (shouldRevalidate) query.refetch();
+    }
+  };
+
+  return {
+    ...query,
+    mutate,
+  };
 };
