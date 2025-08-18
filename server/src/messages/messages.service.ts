@@ -71,35 +71,36 @@ export class MessagesService {
   }
 
   async markAsRead(messageId: string, userId: string) {
-    const message = await this.messageModel.findById(messageId);
-
-    if (!message) {
-      throw new Error('Message not found');
-    }
-
-    // Check if this user already marked the message as read
-    const alreadyRead = message.readBy.some(
-      (receipt) => JSON.stringify(receipt.userId) === userId,
-    );
-
-    if (!alreadyRead) {
-      return this.messageModel
-        .findByIdAndUpdate(
-          messageId,
-          {
-            $push: {
-              readBy: {
-                userId: new Types.ObjectId(userId),
-                readAt: new Date(),
-              },
+    return this.messageModel
+      .findByIdAndUpdate(
+        messageId,
+        {
+          $addToSet: {
+            readBy: {
+              userId: new Types.ObjectId(userId),
+              readAt: new Date(),
             },
-            status: 'read',
           },
-          { new: true },
-        )
-        .exec();
-    }
+        },
+        { new: true },
+      )
+      .populate('senderId', 'name color');
+  }
 
-    return message;
+  async markRoomAsRead(roomId: string, userId: string) {
+    return this.messageModel.updateMany(
+      {
+        roomId: new Types.ObjectId(roomId),
+        'readBy.userId': { $ne: new Types.ObjectId(userId) },
+      },
+      {
+        $addToSet: {
+          readBy: {
+            userId: new Types.ObjectId(userId),
+            readAt: new Date(),
+          },
+        },
+      },
+    );
   }
 }

@@ -194,6 +194,60 @@ export class MessageGateway
     );
   }
 
+  @SubscribeMessage('mark_as_read')
+  async handleMarkAsRead(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() data: { messageId: string; roomId: string },
+  ) {
+    try {
+      const userId = client.handshake.auth.userId as string;
+
+      // Update message read receipt
+      const updatedMessage = await this.messagesService.markAsRead(
+        data.messageId,
+        userId,
+      );
+
+      // Broadcast to room that message was read
+      client.to(`room:${data.roomId}`).emit('message_read', {
+        messageId: data.messageId,
+        userId,
+        readAt: new Date(),
+      });
+
+      return { event: 'marked_as_read', data: updatedMessage };
+    } catch (error) {
+      throw new WsException(error.message);
+    }
+  }
+
+  @SubscribeMessage('mark_room_as_read')
+  async handleMarkRoomAsRead(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() data: { roomId: string },
+  ) {
+    try {
+      const userId = client.handshake.auth.userId as string;
+
+      // Mark all unread messages in room as read
+      const updatedMessages = await this.messagesService.markRoomAsRead(
+        data.roomId,
+        userId,
+      );
+
+      // Broadcast to room
+      client.to(`room:${data.roomId}`).emit('room_messages_read', {
+        roomId: data.roomId,
+        userId,
+        readAt: new Date(),
+      });
+
+      return { event: 'room_marked_as_read', data: updatedMessages };
+    } catch (error) {
+      throw new WsException(error.message);
+    }
+  }
+
   broadcastNewMessage(roomId: string, message: NewMessage) {
     this.server.to(`room:${roomId}`).emit('new_message', message);
   }
