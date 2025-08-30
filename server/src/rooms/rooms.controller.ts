@@ -34,8 +34,9 @@ export class RoomsController {
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.roomsService.findOne(id);
+  findOne(@Param('id') id: string, @Req() req: Request) {
+    const token = req.cookies['access_token'] as string;
+    return this.roomsService.findOne(id, token);
   }
 
   @Get('user/:userId')

@@ -63,8 +63,43 @@ export class RoomsService {
     return new PageDto(rooms, pageMetaDto);
   }
 
-  findOne(id: string) {
-    return this.roomModel.findById(id).exec();
+  async findOne(id: string, accessToken: string) {
+    const room = await this.roomModel.findById(id).exec();
+
+    if (!room) throw new Error('Room not found');
+
+    const payload = await this.jwtService.verifyAsync<TokenPayload>(
+      accessToken,
+      { secret: process.env.JWT_SECRET },
+    );
+
+    const { sub } = payload;
+
+    if (room.type === 'direct' && room.participants.length === 2) {
+      // หา chatWithId (คนที่แชทด้วย - ไม่ใช่ตัวเอง)
+      const chatWithId = room.participants.find(
+        (participantId) => participantId.toString() !== sub,
+      );
+
+      if (chatWithId) {
+        // ดึงข้อมูล user ที่แชทด้วย
+        const chatWithUser = await this.usersService.findOne(
+          chatWithId.toString(),
+        );
+
+        if (chatWithUser) {
+          return {
+            ...room.toObject(),
+            name: chatWithUser.name,
+            color: chatWithUser.color,
+            chatWithId: chatWithId.toString(),
+          };
+        }
+      }
+    }
+
+    // ถ้าไม่ใช่ direct chat หรือไม่มี userId ให้ return ปกติ
+    return room;
   }
 
   async findRoomByUserId(userId: string, accessToken: string) {
@@ -182,6 +217,7 @@ export class RoomsService {
         return {
           ...room,
           name: chatWithUser?.name ?? 'Unknown',
+          color: chatWithUser?.color,
           chatWithId,
           isRead,
         };
