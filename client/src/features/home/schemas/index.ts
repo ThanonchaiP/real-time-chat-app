@@ -29,6 +29,7 @@ export const RoomRecentSchema = RoomSchema.extend({
     readBy: z.array(ReadBySchema),
   }),
   chatWithId: z.string().optional(),
+  isRead: z.boolean().optional(),
 });
 
 export const MessageSchema = z.object({

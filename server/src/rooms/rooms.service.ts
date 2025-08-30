@@ -169,18 +169,25 @@ export class RoomsService {
 
     // 5️⃣ ใส่ชื่อคู่สนทนาลงในห้อง
     const updatedRooms = rooms.map((room) => {
+      const isRead = room.lastMessage.readBy.some(
+        (item) => item.userId.toString() === userId,
+      );
+
       if (room.type === 'direct' && room.participants.length === 2) {
         const chatWithId = room.participants.find(
           (id: string) => id !== userId,
         );
         const chatWithUser = userMap.get(chatWithId?.toString() as string);
+
         return {
           ...room,
           name: chatWithUser?.name ?? 'Unknown',
           chatWithId,
+          isRead,
         };
       }
-      return room;
+
+      return { ...room, isRead };
     });
 
     return updatedRooms;
