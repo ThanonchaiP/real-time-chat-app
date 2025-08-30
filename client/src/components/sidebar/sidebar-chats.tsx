@@ -50,6 +50,7 @@ export const SidebarChats = ({ userId }: SidebarChatsProps) => {
                   createdAt: message.createdAt,
                   contentType: message.contentType,
                   senderId: message.sender._id,
+                  readBy: [],
                 },
               };
             }

@@ -141,6 +141,7 @@ export class RoomsService {
                 createdAt: 1,
                 content: 1,
                 contentType: 1,
+                readBy: 1,
               },
             },
           ],

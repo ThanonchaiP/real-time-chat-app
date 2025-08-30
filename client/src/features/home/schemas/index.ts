@@ -16,11 +16,17 @@ export const RoomResponseSchema = ResponseSchema.extend({
   data: z.array(RoomSchema),
 });
 
+export const ReadBySchema = z.object({
+  userId: z.string(),
+  readAt: z.string(),
+});
+
 export const RoomRecentSchema = RoomSchema.extend({
   lastMessage: z.object({
     content: z.string(),
     contentType: z.string(),
     createdAt: z.string(),
+    readBy: z.array(ReadBySchema),
   }),
   chatWithId: z.string().optional(),
 });
@@ -38,7 +44,7 @@ export const MessageSchema = z.object({
   attachments: z.array(z.unknown()),
   status: z.string(),
   isEdited: z.boolean(),
-  readBy: z.array(z.unknown()),
+  readBy: z.array(ReadBySchema),
   reactions: z.array(z.unknown()),
   createdAt: z.string(),
   updatedAt: z.string(),

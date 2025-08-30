@@ -58,6 +58,19 @@ export const useListMessage = (params: UserListMessage) => {
     ? query.data.pages.flatMap((d) => d?.data ?? []).reverse()
     : [];
 
+  useEffect(() => {
+    return () => {
+      if (queryClient.getQueryData(queryKey)) {
+        queryClient.setQueryData(queryKey, (data: InfiniteMessageData) => {
+          return {
+            pages: data.pages.slice(0, 1),
+            pageParams: data.pageParams.slice(0, 1),
+          };
+        });
+      }
+    };
+  }, [queryClient, queryKey]);
+
   const addMessage = useCallback(
     (newMessage: Message) => {
       queryClient.setQueryData<InfiniteMessageData>(queryKey, (oldData) => {
@@ -80,18 +93,70 @@ export const useListMessage = (params: UserListMessage) => {
     [queryClient, queryKey]
   );
 
-  useEffect(() => {
-    return () => {
-      if (queryClient.getQueryData(queryKey)) {
-        queryClient.setQueryData(queryKey, (data: InfiniteMessageData) => {
-          return {
-            pages: data.pages.slice(0, 1),
-            pageParams: data.pageParams.slice(0, 1),
-          };
-        });
-      }
-    };
-  }, [queryClient, queryKey]);
+  // อัพเดท readBy สำหรับข้อความเดียว
+  const updateMessageReadBy = useCallback(
+    (messageId: string, userId: string, readAt: string) => {
+      queryClient.setQueryData<InfiniteMessageData>(queryKey, (oldData) => {
+        if (!oldData) return oldData;
 
-  return { ...query, allRows, addMessage };
+        return {
+          ...oldData,
+          pages: oldData.pages.map((page: MessageResponse) => ({
+            ...page,
+            data:
+              page.data?.map((message: Message) =>
+                message._id === messageId
+                  ? {
+                      ...message,
+                      readBy: [...(message.readBy || []), { userId, readAt }],
+                    }
+                  : message
+              ) || [],
+          })),
+        };
+      });
+    },
+    [queryClient, queryKey]
+  );
+
+  // อัพเดท readBy สำหรับทุกข้อความในห้อง
+  const updateRoomMessagesReadBy = useCallback(
+    (userId: string, readAt: string) => {
+      queryClient.setQueryData<InfiniteMessageData>(queryKey, (oldData) => {
+        if (!oldData) return oldData;
+
+        return {
+          ...oldData,
+          pages: oldData.pages.map((page: MessageResponse) => ({
+            ...page,
+            data:
+              page.data?.map((message: Message) => {
+                // ตรวจสอบว่ายังไม่เคยอ่านโดย user นี้
+                const alreadyRead = message.readBy?.some(
+                  (read) => read.userId === userId
+                );
+
+                if (!alreadyRead && message.sender._id !== userId) {
+                  return {
+                    ...message,
+                    readBy: [...(message.readBy || []), { userId, readAt }],
+                  };
+                }
+
+                return message;
+              }) || [],
+          })),
+        };
+      });
+    },
+    [queryClient, queryKey]
+  );
+
+  return {
+    ...query,
+    allRows,
+    addMessage,
+    updateMessageReadBy,
+    updateRoomMessagesReadBy,
+  };
 };

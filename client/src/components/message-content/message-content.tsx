@@ -6,8 +6,9 @@ import { VList, VListHandle } from "virtua";
 import dayjs from "dayjs";
 
 import { Message } from "@/features/home/types";
-import { useUser } from "@/hooks";
+import { usePageFocus, useUser } from "@/hooks";
 import { cn } from "@/lib/utils";
+import { useChatStore } from "@/stores/user-store";
 
 import { MessageItem } from "../message-item";
 import { TypingIndicator } from "../typing-indicator";
@@ -25,6 +26,7 @@ interface MessageContentProps {
   hasNextPage: boolean;
   isLoading: boolean;
   isFetchingNextPage: boolean;
+  roomId?: string;
   fetchNextPage: () => void;
 }
 
@@ -33,9 +35,12 @@ export const MessageContent = ({
   hasNextPage,
   isLoading,
   isFetchingNextPage,
+  roomId,
   fetchNextPage,
 }: MessageContentProps) => {
   const { user } = useUser();
+  const isFocused = usePageFocus();
+  const socket = useChatStore((state) => state.socket);
 
   const parentRef = useRef<HTMLDivElement>(null);
   const ref = useRef<VListHandle>(null);
@@ -57,12 +62,27 @@ export const MessageContent = ({
       align: "end",
     });
 
+    // Mark as read when new message arrives and user is at bottom
+    if (
+      messages.length > 0 &&
+      shouldStickToBottom.current &&
+      socket &&
+      roomId &&
+      isFocused
+    ) {
+      const timer = setTimeout(() => {
+        socket.emit("mark_room_as_read", { roomId });
+      }, 500);
+
+      return () => clearTimeout(timer);
+    }
+
     if (messages.length > 0) {
       setTimeout(() => {
         isInitialized.current = true;
       }, 100);
     }
-  }, [messages.length]);
+  }, [messages.length, socket, roomId, isFocused]);
 
   useEffect(() => {
     if (!isFetchingNextPage) {

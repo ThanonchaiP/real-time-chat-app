@@ -1,5 +1,6 @@
 import relativeTime from "dayjs/plugin/relativeTime";
 import dayjs from "dayjs";
+import { Check, CheckCheck } from "lucide-react";
 import { memo } from "react";
 
 import { Message } from "@/features/home/types";
@@ -18,6 +19,10 @@ interface MessageItemProps {
 
 export const MessageItem = memo(({ message, userId }: MessageItemProps) => {
   const isOwner = message.sender._id === userId;
+
+  const readByOthers =
+    message.readBy?.filter((read) => read.userId !== userId) || [];
+  const isRead = readByOthers.length > 0;
 
   const AvatarNode = (
     <Avatar className={cn("size-[35px]", isOwner ? "order-2" : "order-1")}>
@@ -63,14 +68,38 @@ export const MessageItem = memo(({ message, userId }: MessageItemProps) => {
         }`}
       >
         <p className="text-base">{message.content}</p>
-        <p
-          className={cn(
-            "text-xs mt-1",
-            isOwner ? "text-blue-100" : "text-right text-gray-500"
+        <div className="flex items-center gap-1 mt-1">
+          <span
+            className={cn(
+              "text-xs",
+              isOwner ? "text-blue-100" : "text-gray-500"
+            )}
+          >
+            {dayjs(message.createdAt).format("HH:mm")}
+          </span>
+
+          {isOwner && (
+            <div className="flex items-center">
+              {isRead ? (
+                <CheckCheck
+                  size={14}
+                  className={cn(
+                    "ml-1",
+                    isOwner ? "text-blue-200" : "text-gray-400"
+                  )}
+                />
+              ) : (
+                <Check
+                  size={14}
+                  className={cn(
+                    "ml-1",
+                    isOwner ? "text-blue-200" : "text-gray-400"
+                  )}
+                />
+              )}
+            </div>
           )}
-        >
-          {dayjs(message.createdAt).format("HH:mm")}
-        </p>
+        </div>
       </div>
     </div>
   );
