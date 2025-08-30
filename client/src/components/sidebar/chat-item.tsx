@@ -63,7 +63,7 @@ export const ChatItem = ({
             </p>
           )}
         </div>
-        <p className="text-[11px] text-muted-foreground">
+        <p className="text-[11px] text-muted-foreground shrink-0 pt-1">
           {dayjs(data.lastMessage.createdAt).fromNow()}
         </p>
       </div>

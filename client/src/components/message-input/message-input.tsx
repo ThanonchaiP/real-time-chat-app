@@ -6,6 +6,9 @@ import { useChatStore } from "@/stores/user-store";
 
 import { Button } from "../ui/button";
 import { LoadingSpinner } from "../ui/spinner";
+import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
+
+import { EmojiPicker } from "./emoji-picker";
 
 interface MessageInputProps {
   roomId: string;
@@ -93,6 +96,10 @@ export const MessageInput = ({ roomId }: MessageInputProps) => {
     }, 2000);
   };
 
+  const handleEmojiSelect = (icon: string) => {
+    setNewMessage((prev) => prev + icon);
+  };
+
   useEffect(() => {
     return () => {
       if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
@@ -113,8 +120,16 @@ export const MessageInput = ({ roomId }: MessageInputProps) => {
           className="flex-1 p-3 bg-[#E6EBF5] rounded-lg text-sm focus-visible:outline-0"
         />
 
-        <Smile className="w-5 h-5 text-blue-500 cursor-pointer" />
-        <ImageIcon className="w-5 h-5 text-blue-500 cursor-pointer" />
+        <Popover>
+          <PopoverTrigger asChild>
+            <Smile className="w-5 h-5 text-blue-500 cursor-pointer hover:text-blue-600 transition-colors" />
+          </PopoverTrigger>
+          <PopoverContent side="top" align="end" className="p-0">
+            <EmojiPicker onSelect={handleEmojiSelect} />
+          </PopoverContent>
+        </Popover>
+
+        <ImageIcon className="w-5 h-5 text-blue-500 cursor-pointer hover:text-blue-600 transition-colors" />
 
         <Button
           onClick={sendMessage}
