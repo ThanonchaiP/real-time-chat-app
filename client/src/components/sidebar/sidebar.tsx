@@ -6,9 +6,10 @@ import { SidebarUsers } from "./sidebar-users";
 
 interface SidebarProps {
   currentMenu: MenuKey;
+  onMenuChange: (menu: MenuKey) => void;
 }
 
-export const Sidebar = ({ currentMenu }: SidebarProps) => {
+export const Sidebar = ({ currentMenu, onMenuChange }: SidebarProps) => {
   const userContext = useUser();
 
   return (
@@ -16,7 +17,10 @@ export const Sidebar = ({ currentMenu }: SidebarProps) => {
       {currentMenu === "users" ? (
         <SidebarUsers userId={userContext.user?._id ?? ""} />
       ) : (
-        <SidebarChats userId={userContext.user?._id ?? ""} />
+        <SidebarChats
+          userId={userContext.user?._id ?? ""}
+          onMenuChange={onMenuChange}
+        />
       )}
     </div>
   );

@@ -4,19 +4,22 @@ import SimpleBar from "simplebar-react";
 
 import { Message, useListRecent } from "@/features/home";
 import { useChatStore } from "@/stores/user-store";
+import { MenuKey } from "@/types";
 
 import { SearchInput } from "../search-input";
 
 import { ChatItem } from "./chat-item";
 import { ChatSkeleton } from "./chat-skeleton";
+import { EmptyRecentChats } from "./empty-recent-chats";
 
 import "simplebar/dist/simplebar.min.css";
 
 type SidebarChatsProps = {
   userId: string;
+  onMenuChange: (menu: MenuKey) => void;
 };
 
-export const SidebarChats = ({ userId }: SidebarChatsProps) => {
+export const SidebarChats = ({ userId, onMenuChange }: SidebarChatsProps) => {
   const router = useRouter();
   const params = useParams();
   const socket = useChatStore((state) => state.socket);
@@ -107,6 +110,10 @@ export const SidebarChats = ({ userId }: SidebarChatsProps) => {
           Array.from({ length: 10 }).map((_, index) => (
             <ChatSkeleton key={index} isRecent />
           ))}
+
+        {!isLoading && (!data || data.length === 0) && (
+          <EmptyRecentChats onClick={() => onMenuChange("users")} />
+        )}
 
         {data?.map((room) => (
           <ChatItem
