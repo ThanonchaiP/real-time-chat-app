@@ -54,3 +54,8 @@ export const MessageSchema = z.object({
 export const MessageResponseSchema = ResponseSchema.extend({
   data: z.array(MessageSchema),
 });
+
+export const UploadFileResponseSchema = z.object({
+  key: z.string(),
+  url: z.string(),
+});

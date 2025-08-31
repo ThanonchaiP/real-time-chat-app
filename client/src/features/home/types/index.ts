@@ -6,6 +6,7 @@ import {
   RoomRecentSchema,
   MessageSchema,
   MessageResponseSchema,
+  UploadFileResponseSchema,
 } from "../schemas";
 
 export type Room = z.infer<typeof RoomSchema>;
@@ -22,3 +23,5 @@ export type UserStatus = {
   userId: string;
   status: string;
 };
+
+export type UploadFileResponse = z.infer<typeof UploadFileResponseSchema>;
