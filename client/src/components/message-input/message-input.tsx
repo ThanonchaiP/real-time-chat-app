@@ -1,4 +1,4 @@
-import { ImageIcon, Send, Smile } from "lucide-react";
+import { Send, Smile } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
 import { useUser } from "@/hooks";
@@ -9,6 +9,7 @@ import { LoadingSpinner } from "../ui/spinner";
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
 
 import { EmojiPicker } from "./emoji-picker";
+import { UploadImage } from "./upload-image";
 
 interface MessageInputProps {
   roomId: string;
@@ -129,7 +130,7 @@ export const MessageInput = ({ roomId }: MessageInputProps) => {
           </PopoverContent>
         </Popover>
 
-        <ImageIcon className="w-5 h-5 text-blue-500 cursor-pointer hover:text-blue-600 transition-colors" />
+        <UploadImage onUploadComplete={(value) => console.log(value)} />
 
         <Button
           onClick={sendMessage}
