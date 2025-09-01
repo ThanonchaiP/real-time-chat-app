@@ -42,7 +42,12 @@ export const MessageSchema = z.object({
   }),
   content: z.string(),
   contentType: z.string(),
-  attachments: z.array(z.unknown()),
+  attachments: z.array(
+    z.object({
+      url: z.string(),
+      type: z.string(),
+    })
+  ),
   status: z.string(),
   isEdited: z.boolean(),
   readBy: z.array(ReadBySchema),

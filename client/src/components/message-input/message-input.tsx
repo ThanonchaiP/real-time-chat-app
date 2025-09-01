@@ -76,6 +76,37 @@ export const MessageInput = ({ roomId }: MessageInputProps) => {
     }
   };
 
+  const uploadImage = async (url: string) => {
+    if (!socket || isSending) return;
+
+    const senderId = user?._id || "";
+
+    const messagePromise = new Promise((resolve, reject) => {
+      const timeout = setTimeout(() => {
+        reject(new Error("Message send timeout"));
+      }, 5000);
+
+      socket.once("message_sent", () => {
+        clearTimeout(timeout);
+        resolve(true);
+      });
+
+      socket.once("error", (error: unknown) => {
+        clearTimeout(timeout);
+        reject(error);
+      });
+    });
+
+    socket.emit("new_message", {
+      roomId,
+      content: "Sent an image",
+      senderId,
+      attachments: [{ url, type: "image" }],
+    });
+
+    await messagePromise;
+  };
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setNewMessage(value);
@@ -130,7 +161,7 @@ export const MessageInput = ({ roomId }: MessageInputProps) => {
           </PopoverContent>
         </Popover>
 
-        <UploadImage onUploadComplete={(value) => console.log(value)} />
+        <UploadImage onUploadComplete={({ url }) => uploadImage(url)} />
 
         <Button
           onClick={sendMessage}

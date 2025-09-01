@@ -24,6 +24,8 @@ export const MessageItem = memo(({ message, userId }: MessageItemProps) => {
     message.readBy?.filter((read) => read.userId !== userId) || [];
   const isRead = readByOthers.length > 0;
 
+  const isImage = message.attachments.length > 0;
+
   const AvatarNode = (
     <Avatar className={cn("size-[35px]", isOwner ? "order-2" : "order-1")}>
       <AvatarImage src="" />
@@ -67,7 +69,15 @@ export const MessageItem = memo(({ message, userId }: MessageItemProps) => {
             : "bg-[#F5F7FB] text-gray-800 order-2"
         }`}
       >
-        <p className="text-base">{message.content}</p>
+        {isImage ? (
+          <img
+            src={message.attachments[0]?.url}
+            alt="Message attachment"
+            className="max-w-[200px] rounded-lg"
+          />
+        ) : (
+          <p className="text-base">{message.content}</p>
+        )}
         <div className="flex items-center gap-1 mt-1">
           <span
             className={cn(

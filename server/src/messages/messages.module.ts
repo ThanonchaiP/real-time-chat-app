@@ -3,6 +3,7 @@ import { JwtModule } from '@nestjs/jwt';
 import { MongooseModule } from '@nestjs/mongoose';
 
 import { UsersModule } from '@/users/users.module';
+import { S3Module } from '@/s3/s3.module';
 
 import { Message, MessageSchema } from './entities/message.entity';
 import { MessagesController } from './messages.controller';
@@ -12,6 +13,7 @@ import { MessagesService } from './messages.service';
 @Module({
   imports: [
     UsersModule,
+    S3Module,
     JwtModule.register({}),
     MongooseModule.forFeature([{ name: Message.name, schema: MessageSchema }]),
   ],
