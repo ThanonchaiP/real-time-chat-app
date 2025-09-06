@@ -14,6 +14,7 @@ import { MessageItem } from "../message-item";
 import { TypingIndicator } from "../typing-indicator";
 import { Spinner } from "../ui/spinner";
 
+import { EmptyMessage } from "./empty-message";
 import "dayjs/locale/th";
 
 dayjs.extend(relativeTime);
@@ -121,6 +122,11 @@ export const MessageContent = ({
         <Spinner />
       </div>
     );
+  }
+
+  // Show empty state when no messages
+  if (!isLoading && messages.length === 0) {
+    return <EmptyMessage />;
   }
 
   return (

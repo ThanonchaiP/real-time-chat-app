@@ -62,7 +62,7 @@ export const UploadImage = ({
         disabled={disabled}
       />
       <ImageIcon
-        className={`w-5 h-5 transition-colors ${
+        className={`w-5 h-5 transition-colors shrink-0 ${
           disabled
             ? "text-gray-400 cursor-not-allowed"
             : "text-blue-500 cursor-pointer hover:text-blue-600"

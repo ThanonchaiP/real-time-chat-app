@@ -4,7 +4,7 @@ import { MessageSquare, ArrowLeft } from "lucide-react";
 
 export default function HomePage() {
   return (
-    <div className="h-full flex-1 flex items-center justify-center">
+    <div className="hidden h-full flex-1 items-center justify-center lg:flex">
       <div className="text-center space-y-6 max-w-sm mx-auto">
         <div className="bg-gray-100 p-8 rounded-full w-24 h-24 mx-auto flex items-center justify-center">
           <MessageSquare className="w-12 h-12 text-gray-400" />

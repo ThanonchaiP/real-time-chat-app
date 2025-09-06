@@ -13,7 +13,7 @@ export const Sidebar = ({ currentMenu, onMenuChange }: SidebarProps) => {
   const userContext = useUser();
 
   return (
-    <div className="w-[380px] min-w-[380px] bg-[#F5F7FB] h-screen overflow-hidden">
+    <div className="w-full bg-[#F5F7FB] h-screen overflow-hidden lg:w-[380px] lg:min-w-[380px]">
       {currentMenu === "users" ? (
         <SidebarUsers userId={userContext.user?._id ?? ""} />
       ) : (

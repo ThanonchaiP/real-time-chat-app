@@ -1,6 +1,7 @@
 "use client";
 
-import { use, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { use, useEffect, useState } from "react";
 
 import { FallbackError } from "@/components/fallback-error";
 import { MessageContent } from "@/components/message-content";
@@ -12,7 +13,9 @@ import {
   useUser,
   useUserStatus,
   useTypingUsers,
+  useBreakpoint,
 } from "@/hooks";
+import { cn } from "@/lib/utils";
 import { useChatStore } from "@/stores/user-store";
 
 interface RoomPageProps {
@@ -37,6 +40,7 @@ const typingMessage = {
 export default function RoomPage({ params }: RoomPageProps) {
   const { user } = useUser();
   const { roomId } = use(params);
+  const router = useRouter();
   const socket = useChatStore((state) => state.socket);
 
   const { data: roomData, isError } = useGetRoom({ roomId });
@@ -53,9 +57,12 @@ export default function RoomPage({ params }: RoomPageProps) {
 
   const userStatus = useUserStatus(roomData, user?._id);
   useSocketHandler(roomId, addMessage);
+  const { lg } = useBreakpoint();
 
   const typingUserIds = useTypingUsers(roomId);
   const isTyping = typingUserIds.length > 0;
+
+  const [open, setOpen] = useState(false);
 
   useEffect(() => {
     if (!socket) return;
@@ -81,13 +88,40 @@ export default function RoomPage({ params }: RoomPageProps) {
     socket.emit("mark_room_as_read", { roomId: roomId });
   }, [roomId, socket]);
 
+  useEffect(() => {
+    if (lg) return;
+    setOpen(true);
+  }, [lg, roomId]);
+
+  const handleOpen = (open: boolean) => {
+    setOpen(open);
+    router.push("/");
+  };
+
+  // Early return if not open on mobile
+  if (!open && !lg) {
+    return null;
+  }
+
   return (
-    <div className="flex-1 flex flex-col h-full">
+    <div
+      className={cn(
+        "bg-white flex flex-col h-full transition-all duration-300 ease-in-out",
+        // Mobile styles with slide animation
+        "fixed top-0 bottom-0 w-full z-30",
+        open
+          ? "left-0 animate-in slide-in-from-right-full duration-300"
+          : "left-full animate-out slide-out-to-right-full duration-300",
+        // Desktop styles
+        "lg:left-auto lg:flex-1 lg:relative lg:animate-none"
+      )}
+    >
       <FallbackError isError={isError} className="mt-6">
         <MessageHeader
           name={roomData?.name ?? ""}
           color={roomData?.color}
           isOnline={userStatus === "online"}
+          onOpen={handleOpen}
         />
         <MessageContent
           roomId={roomId}

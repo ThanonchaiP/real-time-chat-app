@@ -6,7 +6,7 @@ export const EmojiPicker = ({
   onSelect: (icon: string) => void;
 }) => {
   return (
-    <div>
+    <div className="shrink-0">
       <h3 className="px-4 py-2 font-medium text-md text-gray-700">Emoji</h3>
 
       <div className="p-3 max-h-64 overflow-y-auto">

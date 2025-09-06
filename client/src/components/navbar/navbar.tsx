@@ -2,21 +2,16 @@
 
 import {
   BotMessageSquareIcon,
-  LogOut,
   MessageSquareMore,
   UserRound,
 } from "lucide-react";
 
-import { useLogout } from "@/features/auth";
-import { useUser } from "@/hooks";
 import { cn } from "@/lib/utils";
 import { MenuKey } from "@/types";
-import { getAvatarName } from "@/utils";
 
-import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
-import { Button } from "../ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip";
-import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
+
+import { UserIcon } from "./user-icon";
 
 interface NavbarProps {
   currentMenu?: MenuKey;
@@ -37,33 +32,26 @@ const navigations = [
 ];
 
 export const Navbar = ({ currentMenu, onMenuChange }: NavbarProps) => {
-  const userContext = useUser();
-
-  const { user } = userContext;
-
-  const { mutate } = useLogout({
-    onSuccess: () => {
-      window.location.href = "/login";
-    },
-  });
-
-  const onLogout = () => {
-    mutate();
-    userContext.logout();
-  };
-
   return (
-    <div className="min-w-[75px] max-w-[75px] flex flex-col items-center justify-between border-r py-6">
+    <div
+      className={cn(
+        "min-w-[75px] w-full flex items-center justify-center gap-10 lg:justify-between border-r py-1 lg:py-6 lg:max-w-[75px] lg:flex-col lg:gap-0",
+        "fixed bottom-0 left-0 bg-white border border-t-gray-100 shadow lg:static lg:border-0 lg:shadow-none"
+      )}
+    >
       <div className="flex flex-col items-center">
-        <BotMessageSquareIcon className="text-blue-500" size={38} />
+        <BotMessageSquareIcon
+          className="hidden text-blue-500 lg:block"
+          size={38}
+        />
 
-        <div className="flex flex-col gap-6 mt-24">
+        <div className="flex gap-10 lg:gap-6 lg:flex-col lg:mt-24">
           {navigations.map((nav) => (
             <Tooltip key={nav.id} delayDuration={200} disableHoverableContent>
               <TooltipTrigger asChild>
                 <button
                   className={cn(
-                    "size-14 flex items-center justify-center rounded cursor-pointer text-gray-500 hover:text-blue-500",
+                    "size-12 flex items-center justify-center rounded cursor-pointer text-gray-500 hover:text-blue-500 lg:size-14",
                     currentMenu === nav.id && "bg-sky-50 text-blue-500"
                   )}
                   aria-label={nav.name}
@@ -83,39 +71,7 @@ export const Navbar = ({ currentMenu, onMenuChange }: NavbarProps) => {
         </div>
       </div>
 
-      <Popover>
-        <PopoverTrigger asChild>
-          <Avatar className="w-10 h-10 cursor-pointer">
-            <AvatarImage src="" />
-            <AvatarFallback
-              className="font-bold text-white"
-              style={{ backgroundColor: user?.color }}
-            >
-              {getAvatarName(user?.name)}
-            </AvatarFallback>
-          </Avatar>
-        </PopoverTrigger>
-        <PopoverContent
-          className="w-48 text-center"
-          side="right"
-          align="end"
-          sideOffset={8}
-        >
-          <p className="text-sm text-muted-foreground truncate mb-2">
-            Signed in as
-          </p>
-          <p className="font-medium">{user?.name || "Anonymous"}</p>
-          <Button
-            variant="destructive"
-            size="sm"
-            className="mt-4 w-full"
-            onClick={onLogout}
-          >
-            <LogOut className="mr-1" size={16} />
-            Log out
-          </Button>
-        </PopoverContent>
-      </Popover>
+      <UserIcon />
     </div>
   );
 };

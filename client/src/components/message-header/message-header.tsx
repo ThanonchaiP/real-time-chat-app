@@ -1,3 +1,5 @@
+import { ChevronLeft } from "lucide-react";
+
 import { getAvatarName } from "@/utils";
 
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
@@ -6,15 +8,22 @@ interface MessageHeaderProps {
   name: string;
   color?: string;
   isOnline: boolean;
+  onOpen: (open: boolean) => void;
 }
 
 export const MessageHeader = ({
   name,
   color = "#4A90E2",
   isOnline,
+  onOpen,
 }: MessageHeaderProps) => {
   return (
-    <div className="p-4 flex items-center gap-3 border-b border-gray-200">
+    <div className="flex items-center gap-3 p-4 border-b border-gray-200">
+      <ChevronLeft
+        className="size-5 cursor-pointer text-neutral-400 lg:hidden"
+        onClick={() => onOpen(false)}
+      />
+
       <Avatar className="relative size-[35px] overflow-visible">
         <AvatarImage src="" />
         <AvatarFallback

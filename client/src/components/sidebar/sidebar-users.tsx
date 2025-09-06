@@ -35,7 +35,7 @@ export const SidebarUsers = ({ userId }: SidebarUsersProps) => {
   };
 
   return (
-    <div className="h-full">
+    <div className="h-[calc(100vh-58px)] lg:h-full">
       <div className="p-6 pb-2">
         <h2 className="text-xl font-semibold mb-6">Users</h2>
         <SearchInput placeholder="Search users" onChange={handleSearchChange} />
