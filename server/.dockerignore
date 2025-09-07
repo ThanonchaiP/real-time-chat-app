@@ -1,0 +1,40 @@
+# Dependencies
+node_modules
+.pnpm-store
+.pnpm-debug.log*
+
+# Production build
+dist
+build
+
+# Environment files
+.env*
+
+# Git
+.git
+.gitignore
+
+# Documentation
+README.md
+docs
+
+# IDE
+.vscode
+.idea
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+logs
+*.log
+
+# Coverage
+coverage
+
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
