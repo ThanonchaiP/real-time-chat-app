@@ -1,5 +1,5 @@
 # Production-optimized Dockerfile for NestJS with pnpm
-FROM node:20 AS base
+FROM node:20-alpine AS base
 
 # Install pnpm globally
 RUN npm install -g pnpm
