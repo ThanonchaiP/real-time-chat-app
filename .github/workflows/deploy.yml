@@ -12,8 +12,8 @@ on:
       - "server/**"
 
 env:
-  AWS_REGION: us-east-1
-  ECR_REPOSITORY: real-time-chat-app
+  AWS_REGION: ap-southeast-7
+  ECR_REPOSITORY: chatapp-server
   IMAGE_TAG: ${{ github.sha }}
 
 jobs:
