@@ -10,7 +10,11 @@ import { TransformInterceptor } from './common/interceptors/transform.intercepto
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   app.enableCors({
-    origin: 'http://localhost:3000', // frontend URL
+    origin: [
+      'https://chat.14again.life',
+      'https://14again.life',
+      'http://localhost:3000',
+    ], // frontend URL
     credentials: true, // ✅ ต้องเปิดเพื่อรับ cookie
   });
   app.use(helmet());

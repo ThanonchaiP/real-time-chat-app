@@ -1,6 +1,7 @@
 import relativeTime from "dayjs/plugin/relativeTime";
 import dayjs from "dayjs";
 import { Check, CheckCheck } from "lucide-react";
+import Image from "next/image";
 import { memo } from "react";
 
 import { Message } from "@/features/home/types";
@@ -70,10 +71,14 @@ export const MessageItem = memo(({ message, userId }: MessageItemProps) => {
         }`}
       >
         {isImage ? (
-          <img
+          <Image
             src={message.attachments[0]?.url}
             alt="Message attachment"
-            className="max-w-[200px] rounded-lg"
+            width={200}
+            height={200}
+            priority
+            quality={90}
+            className="size-auto max-w-[200px] rounded-lg"
           />
         ) : (
           <p className="text-base">{message.content}</p>

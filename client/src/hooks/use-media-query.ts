@@ -13,14 +13,15 @@ export function useMediaQuery(
     defaultValue = false,
     initializeWithValue = true,
   }: UseMediaQueryOptions = {}
-) {
-  const getMatches = () => {
-    if (typeof window === "undefined" || !initializeWithValue)
+): boolean {
+  const getMatches = (): boolean => {
+    if (typeof window === "undefined" || !initializeWithValue) {
       return defaultValue;
+    }
     return window.matchMedia(query).matches;
   };
 
-  const [matches, setMatches] = useState<boolean>(getMatches);
+  const [matches, setMatches] = useState<boolean>(() => getMatches());
 
   // เก็บ MediaQueryList เดิมไว้เพื่อไม่สร้างใหม่ทุก render
   const mql = useMemo(() => {
@@ -31,22 +32,19 @@ export function useMediaQuery(
   useEffect(() => {
     if (!mql) return;
 
-    const onChange = (e: MediaQueryListEvent) => setMatches(e.matches);
-    // รองรับทั้ง API ใหม่/เก่า
-    if ("addEventListener" in mql) {
-      mql.addEventListener("change", onChange);
-      setMatches(mql.matches);
-      return () => mql.removeEventListener("change", onChange);
-    } else {
-      // @ts-expect-error: fallback for old Safari
-      mql.addListener(onChange);
-      // @ts-expect-error
-      setMatches(mql.matches);
-      return () => {
-        // @ts-expect-error
-        mql.removeListener(onChange);
-      };
-    }
+    const handleChange = (event: MediaQueryListEvent) => {
+      setMatches(event.matches);
+    };
+
+    // ใช้ addEventListener เท่านั้น (API ปัจจุบัน)
+    mql.addEventListener("change", handleChange);
+
+    // อัปเดตค่าเริ่มต้น
+    setMatches(mql.matches);
+
+    return () => {
+      mql.removeEventListener("change", handleChange);
+    };
   }, [mql]);
 
   return matches;
