@@ -35,8 +35,8 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     if (!data) return;
 
-    const socketInstance: Socket = io(process.env.NEXT_PUBLIC_SERVER_URL, {
-      transports: ["websocket"],
+    const socketInstance: Socket = io("wss://api.14again.life", {
+      transports: ["websocket", "polling"],
       withCredentials: true,
       auth: { userId: data._id },
     });
