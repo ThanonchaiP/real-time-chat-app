@@ -30,7 +30,7 @@ apiClient.interceptors.response.use(
 
       try {
         await apiClient.post("/auth/refresh-token");
-        return apiClient(originalRequest); // Retry the original request
+        return apiClient(originalRequest);
       } catch (err) {
         return Promise.reject(err);
       }
