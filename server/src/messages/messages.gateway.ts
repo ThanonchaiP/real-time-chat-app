@@ -29,7 +29,14 @@ interface NewMessage extends Message {
 }
 
 @WebSocketGateway({
-  cors: { origin: 'http://localhost:3000', credentials: true },
+  cors: {
+    origin: [
+      'https://chat.14again.life',
+      'https://14again.life',
+      'http://localhost:3000',
+    ],
+    credentials: true,
+  },
 })
 export class MessageGateway
   implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect
