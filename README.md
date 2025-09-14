@@ -170,14 +170,15 @@ npm start
 ## 📱 Screenshots
 
 <div align="center">
-  <img src="./docs/screenshots/desktop-chat.png" alt="Desktop Chat View" width="45%" />
-  <img src="./docs/screenshots/mobile-chat.png" alt="Mobile Chat View" width="25%" />
+  <img src="https://github.com/user-attachments/assets/0185651e-98a7-4169-b9c7-d7e41e754525" alt="Signin" width="30%" />
+  <img src="https://github.com/user-attachments/assets/d190ce49-2ebf-4dff-8f50-8bf062f91af6" alt="Signup" width="30%" />
+  <img src="https://github.com/user-attachments/assets/9a9069ca-ae43-40ef-a22d-f2a58bd48e8f" alt="Dashboard" width="30%" />
 </div>
 
 <div align="center">
-  <img src="./docs/screenshots/user-list.png" alt="User List" width="30%" />
-  <img src="./docs/screenshots/dark-theme.png" alt="Dark Theme" width="30%" />
-  <img src="./docs/screenshots/typing-indicator.png" alt="Typing Indicator" width="30%" />
+  <img src="https://github.com/user-attachments/assets/abc4b942-954e-4708-ae53-e57cded6fa1c" alt="Dashboard" width="30%" />
+  <img src="https://github.com/user-attachments/assets/2df40e3e-6209-4589-b603-ed5db39d6919" alt="Room" width="30%" />
+  <img src="https://github.com/user-attachments/assets/93ee9cbb-f556-4274-9dbd-a772ca18f253" alt="Room" width="30%" />
 </div>
 
 ## 🏗️ Project Structure
@@ -361,3 +362,4 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 <div align="center">
   <a href
+
