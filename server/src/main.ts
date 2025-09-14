@@ -7,15 +7,29 @@ import helmet from 'helmet';
 import { AppModule } from './app.module';
 import { TransformInterceptor } from './common/interceptors/transform.interceptor';
 
-async function bootstrap() {
+async function bootstrap(): Promise<void> {
   const app = await NestFactory.create(AppModule);
+  const allowlist: string[] = [
+    'https://chat.14again.life',
+    'https://14again.life',
+    'http://localhost:3000',
+  ];
+
   app.enableCors({
-    origin: [
-      'https://chat.14again.life',
-      'https://14again.life',
-      'http://localhost:3000',
-    ], // frontend URL
-    credentials: true, // ✅ ต้องเปิดเพื่อรับ cookie
+    origin: (
+      origin: string | undefined,
+      callback: (error: Error | null, allow?: boolean) => void,
+    ) => {
+      // อนุญาตกรณีไม่มี Origin (เช่น curl/health checks)
+      if (!origin) return callback(null, true);
+      if (allowlist.includes(origin)) return callback(null, true);
+      return callback(new Error('Not allowed by CORS'), false);
+    },
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+    exposedHeaders: ['Set-Cookie'],
+    optionsSuccessStatus: 204,
   });
   app.use(helmet());
   app.use(cookieParser());

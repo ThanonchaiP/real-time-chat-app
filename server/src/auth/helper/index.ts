@@ -6,6 +6,7 @@ const getBaseCookieOptions = () => ({
   httpOnly: true,
   secure: isProd,
   sameSite: 'strict' as const,
+  ...(isProd ? { domain: '.14again.life' } : {}),
 });
 
 export const setAuthCookies = (
