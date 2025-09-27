@@ -1,0 +1,22 @@
+name: Release
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Echo release tag
+        run: 'echo "Release tag: ${{ github.event.release.tag_name }}"'
+
+      - name: Echo release name
+        run: 'echo "Release name: ${{ github.event.release.name }}"'
+
+      - name: Echo release body
+        run: 'echo "Release body: ${{ github.event.release.body }}"'
