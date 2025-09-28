@@ -69,16 +69,44 @@ jobs:
                   IMAGE_TAG: ${{ inputs.image_tag }}
                   SERVICE_NAME: ${{ inputs.service_name }}
                   ENVIRONMENT: ${{ inputs.environment }}
+                  AWS_DEFAULT_REGION: ${{ secrets.AWS_REGION }}
               run: |
                   # Set image for deployment
                   IMAGE_URI="$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
 
+                  # Validate and clean up IMAGE_TAG
+                  CLEAN_IMAGE_TAG=$(echo "$IMAGE_TAG" | sed 's/[^a-zA-Z0-9._-]//g')
+                  if [ "$IMAGE_TAG" != "$CLEAN_IMAGE_TAG" ]; then
+                    echo "⚠️ Warning: IMAGE_TAG contained invalid characters. Cleaned: $IMAGE_TAG -> $CLEAN_IMAGE_TAG"
+                    IMAGE_TAG="$CLEAN_IMAGE_TAG"
+                    IMAGE_URI="$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
+                  fi
+
                   echo "🔄 Updating deployment $SERVICE_NAME with image: $IMAGE_URI"
+                  echo "📝 Registry: $ECR_REGISTRY"
+                  echo "📝 Repository: $ECR_REPOSITORY" 
+                  echo "📝 Tag: $IMAGE_TAG"
+
+                  # Validate IMAGE_URI format
+                  if [[ ! "$IMAGE_URI" =~ ^[a-zA-Z0-9][a-zA-Z0-9._-]*\.amazonaws\.com/[a-zA-Z0-9][a-zA-Z0-9._/-]*:[a-zA-Z0-9._-]+$ ]]; then
+                    echo "❌ Invalid IMAGE_URI format: $IMAGE_URI"
+                    echo "Expected format: registry.amazonaws.com/repository:tag"
+                    exit 1
+                  fi
 
                   # Check current deployment status before update
                   echo "📋 Current deployment status:"
                   kubectl get deployment $SERVICE_NAME -n $ENVIRONMENT || echo "Deployment not found"
                   kubectl get pods -n $ENVIRONMENT -l app=$SERVICE_NAME || echo "No pods found"
+
+                  # Verify image exists in ECR
+                  echo "🔍 Verifying image exists in ECR..."
+                  aws ecr describe-images --repository-name "$ECR_REPOSITORY" --image-ids imageTag="$IMAGE_TAG" --region $AWS_DEFAULT_REGION || {
+                    echo "❌ Image $ECR_REPOSITORY:$IMAGE_TAG not found in ECR!"
+                    echo "📋 Available images in repository:"
+                    aws ecr describe-images --repository-name "$ECR_REPOSITORY" --region $AWS_DEFAULT_REGION --query 'imageDetails[*].imageTags' --output table || echo "Failed to list images"
+                    exit 1
+                  }
 
                   # Update deployment
                   kubectl set image deployment/$SERVICE_NAME $SERVICE_NAME=$IMAGE_URI -n $ENVIRONMENT
