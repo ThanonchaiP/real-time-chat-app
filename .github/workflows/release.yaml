@@ -111,7 +111,7 @@ jobs:
     needs: build-backend
     uses: ./.github/workflows/deploy-k8s.yaml
     with:
-      environment: "production"
+      environment: "app-ns"
       service_name: "backend"
       image_tag: ${{ startsWith(github.event.release.tag_name, 'v') && format('backend-{0}', github.event.release.tag_name) || github.event.release.tag_name }}
       ecr_repository: "chatapp-server"

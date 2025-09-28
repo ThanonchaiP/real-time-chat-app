@@ -73,11 +73,37 @@ jobs:
                   # Set image for deployment
                   IMAGE_URI="$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
 
+                  echo "🔄 Updating deployment $SERVICE_NAME with image: $IMAGE_URI"
+
+                  # Check current deployment status before update
+                  echo "📋 Current deployment status:"
+                  kubectl get deployment $SERVICE_NAME -n $ENVIRONMENT || echo "Deployment not found"
+                  kubectl get pods -n $ENVIRONMENT -l app=$SERVICE_NAME || echo "No pods found"
+
                   # Update deployment
                   kubectl set image deployment/$SERVICE_NAME $SERVICE_NAME=$IMAGE_URI -n $ENVIRONMENT
 
-                  # Wait for rollout to complete
-                  kubectl rollout status deployment/$SERVICE_NAME -n $ENVIRONMENT --timeout=300s
+                  # Wait for rollout to complete with longer timeout
+                  echo "⏳ Waiting for rollout to complete..."
+                  kubectl rollout status deployment/$SERVICE_NAME -n $ENVIRONMENT --timeout=600s || {
+                    echo "❌ Rollout failed or timed out. Checking status..."
+                    
+                    # Debug information
+                    echo "📋 Deployment describe:"
+                    kubectl describe deployment $SERVICE_NAME -n $ENVIRONMENT
+                    
+                    echo "📋 Pod status:"
+                    kubectl get pods -n $ENVIRONMENT -l app=$SERVICE_NAME -o wide
+                    
+                    echo "📋 Events:"
+                    kubectl get events -n $ENVIRONMENT --sort-by=.metadata.creationTimestamp | tail -20
+                    
+                    # Try to get logs from failing pods
+                    echo "📋 Pod logs:"
+                    kubectl get pods -n $ENVIRONMENT -l app=$SERVICE_NAME --field-selector=status.phase!=Running -o name | head -3 | xargs -I {} kubectl logs {} -n $ENVIRONMENT --tail=50 || true
+                    
+                    exit 1
+                  }
 
                   # Verify deployment
                   kubectl get pods -n $ENVIRONMENT -l app=$SERVICE_NAME
@@ -89,12 +115,31 @@ jobs:
                   SERVICE_NAME: ${{ inputs.service_name }}
                   ENVIRONMENT: ${{ inputs.environment }}
               run: |
-                  # Check if deployment is ready
-                  kubectl wait --for=condition=available --timeout=300s deployment/$SERVICE_NAME -n $ENVIRONMENT
+                  echo "🔍 Running final verification..."
+
+                  # Check if deployment is ready with longer timeout
+                  kubectl wait --for=condition=available --timeout=600s deployment/$SERVICE_NAME -n $ENVIRONMENT || {
+                    echo "❌ Deployment not ready. Final status check:"
+                    kubectl get deployment $SERVICE_NAME -n $ENVIRONMENT
+                    kubectl describe deployment $SERVICE_NAME -n $ENVIRONMENT
+                    exit 1
+                  }
 
                   # Get service info
-                  echo "📋 Deployment Status:"
+                  echo "📋 Final Deployment Status:"
                   kubectl get deployment $SERVICE_NAME -n $ENVIRONMENT
 
-                  echo "📋 Pod Status:"
-                  kubectl get pods -n $ENVIRONMENT -l app=$SERVICE_NAME
+                  echo "📋 Final Pod Status:"
+                  kubectl get pods -n $ENVIRONMENT -l app=$SERVICE_NAME -o wide
+
+                  # Check if all pods are running
+                  RUNNING_PODS=$(kubectl get pods -n $ENVIRONMENT -l app=$SERVICE_NAME --field-selector=status.phase=Running --no-headers | wc -l)
+                  TOTAL_PODS=$(kubectl get pods -n $ENVIRONMENT -l app=$SERVICE_NAME --no-headers | wc -l)
+
+                  echo "📊 Pods Summary: $RUNNING_PODS/$TOTAL_PODS running"
+
+                  if [ "$RUNNING_PODS" -eq "$TOTAL_PODS" ]; then
+                    echo "✅ All pods are running successfully!"
+                  else
+                    echo "⚠️ Some pods are not running. Check logs above."
+                  fi
