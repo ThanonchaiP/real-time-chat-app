@@ -74,13 +74,13 @@ jobs:
                   IMAGE_URI="$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
 
                   # Update deployment
-                  kubectl set image deployment/$SERVICE_NAME-$ENVIRONMENT $SERVICE_NAME=$IMAGE_URI -n $ENVIRONMENT
+                  kubectl set image deployment/$SERVICE_NAME $SERVICE_NAME=$IMAGE_URI -n $ENVIRONMENT
 
                   # Wait for rollout to complete
-                  kubectl rollout status deployment/$SERVICE_NAME-$ENVIRONMENT -n $ENVIRONMENT --timeout=300s
+                  kubectl rollout status deployment/$SERVICE_NAME -n $ENVIRONMENT --timeout=300s
 
                   # Verify deployment
-                  kubectl get pods -n $ENVIRONMENT -l app=$SERVICE_NAME-$ENVIRONMENT
+                  kubectl get pods -n $ENVIRONMENT -l app=$SERVICE_NAME
 
                   echo "✅ Successfully deployed $SERVICE_NAME:$IMAGE_TAG to $ENVIRONMENT"
 
@@ -90,11 +90,11 @@ jobs:
                   ENVIRONMENT: ${{ inputs.environment }}
               run: |
                   # Check if deployment is ready
-                  kubectl wait --for=condition=available --timeout=300s deployment/$SERVICE_NAME-$ENVIRONMENT -n $ENVIRONMENT
+                  kubectl wait --for=condition=available --timeout=300s deployment/$SERVICE_NAME -n $ENVIRONMENT
 
                   # Get service info
                   echo "📋 Deployment Status:"
-                  kubectl get deployment $SERVICE_NAME-$ENVIRONMENT -n $ENVIRONMENT
+                  kubectl get deployment $SERVICE_NAME -n $ENVIRONMENT
 
                   echo "📋 Pod Status:"
-                  kubectl get pods -n $ENVIRONMENT -l app=$SERVICE_NAME-$ENVIRONMENT
+                  kubectl get pods -n $ENVIRONMENT -l app=$SERVICE_NAME

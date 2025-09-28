@@ -95,7 +95,7 @@ jobs:
     uses: ./.github/workflows/deploy-k8s.yaml
     with:
       environment: "app-ns"
-      service_name: "frontend"
+      service_name: "nextjs-app"
       image_tag: ${{ startsWith(github.event.release.tag_name, 'v') && format('frontend-{0}', github.event.release.tag_name) || github.event.release.tag_name }}
       ecr_repository: "chatapp-server"
     secrets:
