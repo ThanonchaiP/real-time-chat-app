@@ -62,7 +62,7 @@ jobs:
               id: login-ecr
               uses: aws-actions/amazon-ecr-login@v2
 
-            - name: Update Kubernetes deployment
+            - name: Create ECR secret and update deployment
               env:
                   ECR_REGISTRY: ${{ secrets.ECR_REGISTRY }}
                   ECR_REPOSITORY: ${{ inputs.ecr_repository }}
@@ -94,6 +94,17 @@ jobs:
                     exit 1
                   fi
 
+                  # Create or update ECR image pull secret
+                  echo "🔑 Creating ECR image pull secret..."
+                  ECR_TOKEN=$(aws ecr get-login-password --region $AWS_DEFAULT_REGION)
+
+                  kubectl delete secret ecr-registry-secret -n $ENVIRONMENT --ignore-not-found=true
+                  kubectl create secret docker-registry ecr-registry-secret \
+                    --docker-server=$ECR_REGISTRY \
+                    --docker-username=AWS \
+                    --docker-password="$ECR_TOKEN" \
+                    -n $ENVIRONMENT
+
                   # Check current deployment status before update
                   echo "📋 Current deployment status:"
                   kubectl get deployment $SERVICE_NAME -n $ENVIRONMENT || echo "Deployment not found"
@@ -108,8 +119,27 @@ jobs:
                     exit 1
                   }
 
-                  # Update deployment
+                  # Update deployment image
                   kubectl set image deployment/$SERVICE_NAME $SERVICE_NAME=$IMAGE_URI -n $ENVIRONMENT
+
+                  # Patch deployment to use imagePullSecret  
+                  echo "🔑 Patching deployment to use ECR secret..."
+                  kubectl patch deployment $SERVICE_NAME -n $ENVIRONMENT -p '{
+                    "spec": {
+                      "template": {
+                        "spec": {
+                          "imagePullSecrets": [
+                            {
+                              "name": "ecr-registry-secret"
+                            }
+                          ]
+                        }
+                      }
+                    }
+                  }'
+
+                  # Restart rollout to apply changes
+                  kubectl rollout restart deployment/$SERVICE_NAME -n $ENVIRONMENT
 
                   # Wait for rollout to complete with longer timeout
                   echo "⏳ Waiting for rollout to complete..."
