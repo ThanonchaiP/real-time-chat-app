@@ -1,0 +1,100 @@
+name: Deploy to DigitalOcean K8s
+
+on:
+    workflow_call:
+        inputs:
+            environment:
+                required: true
+                type: string
+                description: "Environment to deploy to (staging/production)"
+            service_name:
+                required: true
+                type: string
+                description: "Service name (frontend/backend)"
+            image_tag:
+                required: true
+                type: string
+                description: "Docker image tag to deploy"
+            ecr_repository:
+                required: true
+                type: string
+                description: "ECR repository name"
+        secrets:
+            DIGITALOCEAN_ACCESS_TOKEN:
+                required: true
+            DO_CLUSTER_ID:
+                required: true
+            ECR_REGISTRY:
+                required: true
+            AWS_ACCESS_KEY_ID:
+                required: true
+            AWS_SECRET_ACCESS_KEY:
+                required: true
+            AWS_REGION:
+                required: true
+
+jobs:
+    deploy:
+        runs-on: ubuntu-latest
+        environment: ${{ inputs.environment }}
+
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v4
+
+            - name: Install doctl
+              uses: digitalocean/action-doctl@v2
+              with:
+                  token: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
+
+            - name: Configure kubectl for DigitalOcean
+              run: |
+                  doctl kubernetes cluster kubeconfig save ${{ secrets.DO_CLUSTER_ID }}
+
+            - name: Configure AWS credentials for ECR
+              uses: aws-actions/configure-aws-credentials@v4
+              with:
+                  aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+                  aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+                  aws-region: ${{ secrets.AWS_REGION }}
+
+            - name: Login to Amazon ECR
+              id: login-ecr
+              uses: aws-actions/amazon-ecr-login@v2
+
+            - name: Update Kubernetes deployment
+              env:
+                  ECR_REGISTRY: ${{ secrets.ECR_REGISTRY }}
+                  ECR_REPOSITORY: ${{ inputs.ecr_repository }}
+                  IMAGE_TAG: ${{ inputs.image_tag }}
+                  SERVICE_NAME: ${{ inputs.service_name }}
+                  ENVIRONMENT: ${{ inputs.environment }}
+              run: |
+                  # Set image for deployment
+                  IMAGE_URI="$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
+
+                  # Update deployment
+                  kubectl set image deployment/$SERVICE_NAME-$ENVIRONMENT $SERVICE_NAME=$IMAGE_URI -n $ENVIRONMENT
+
+                  # Wait for rollout to complete
+                  kubectl rollout status deployment/$SERVICE_NAME-$ENVIRONMENT -n $ENVIRONMENT --timeout=300s
+
+                  # Verify deployment
+                  kubectl get pods -n $ENVIRONMENT -l app=$SERVICE_NAME-$ENVIRONMENT
+
+                  echo "✅ Successfully deployed $SERVICE_NAME:$IMAGE_TAG to $ENVIRONMENT"
+
+            - name: Run deployment verification
+              env:
+                  SERVICE_NAME: ${{ inputs.service_name }}
+                  ENVIRONMENT: ${{ inputs.environment }}
+              run: |
+                  # Check if deployment is ready
+                  kubectl wait --for=condition=available --timeout=300s deployment/$SERVICE_NAME-$ENVIRONMENT -n $ENVIRONMENT
+
+                  # Get service info
+                  echo "📋 Deployment Status:"
+                  kubectl get deployment $SERVICE_NAME-$ENVIRONMENT -n $ENVIRONMENT
+
+                  echo "📋 Pod Status:"
+                  kubectl get pods -n $ENVIRONMENT -l app=$SERVICE_NAME-$ENVIRONMENT

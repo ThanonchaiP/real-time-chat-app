@@ -88,3 +88,37 @@ jobs:
           docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
           echo "Backend image pushed: $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
+
+  deploy-frontend:
+    if: startsWith(github.event.release.tag_name, 'frontend-') || startsWith(github.event.release.tag_name, 'v')
+    needs: build-frontend
+    uses: ./.github/workflows/deploy-k8s.yaml
+    with:
+      environment: "production"
+      service_name: "frontend"
+      image_tag: ${{ startsWith(github.event.release.tag_name, 'v') && format('frontend-{0}', github.event.release.tag_name) || github.event.release.tag_name }}
+      ecr_repository: "your-frontend-repo"
+    secrets:
+      DIGITALOCEAN_ACCESS_TOKEN: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
+      DO_CLUSTER_ID: ${{ secrets.DO_CLUSTER_ID }}
+      ECR_REGISTRY: ${{ secrets.ECR_REGISTRY }}
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      AWS_REGION: ${{ secrets.AWS_REGION }}
+
+  deploy-backend:
+    if: startsWith(github.event.release.tag_name, 'backend-') || startsWith(github.event.release.tag_name, 'v')
+    needs: build-backend
+    uses: ./.github/workflows/deploy-k8s.yaml
+    with:
+      environment: "production"
+      service_name: "backend"
+      image_tag: ${{ startsWith(github.event.release.tag_name, 'v') && format('backend-{0}', github.event.release.tag_name) || github.event.release.tag_name }}
+      ecr_repository: "your-backend-repo"
+    secrets:
+      DIGITALOCEAN_ACCESS_TOKEN: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
+      DO_CLUSTER_ID: ${{ secrets.DO_CLUSTER_ID }}
+      ECR_REGISTRY: ${{ secrets.ECR_REGISTRY }}
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      AWS_REGION: ${{ secrets.AWS_REGION }}
