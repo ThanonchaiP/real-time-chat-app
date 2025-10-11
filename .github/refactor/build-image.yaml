@@ -1,0 +1,79 @@
+name: Build Docker Image
+
+on:
+    workflow_call:
+        inputs:
+            service_name:
+                required: true
+                type: string
+                description: "Service name (frontend/backend)"
+            dockerfile_path:
+                required: true
+                type: string
+                description: "Path to Dockerfile directory"
+            image_tag:
+                required: true
+                type: string
+                description: "Docker image tag"
+            ecr_repository:
+                required: true
+                type: string
+                description: "ECR repository name"
+        secrets:
+            AWS_ACCESS_KEY_ID:
+                required: true
+            AWS_SECRET_ACCESS_KEY:
+                required: true
+            AWS_REGION:
+                required: true
+        outputs:
+            image_uri:
+                description: "Full image URI"
+                value: ${{ jobs.build.outputs.image_uri }}
+
+jobs:
+    build:
+        runs-on: ubuntu-latest
+        outputs:
+            image_uri: ${{ steps.build.outputs.image_uri }}
+
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v4
+
+            - name: Configure AWS credentials
+              uses: aws-actions/configure-aws-credentials@v4
+              with:
+                  aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+                  aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+                  aws-region: ${{ secrets.AWS_REGION }}
+
+            - name: Login to Amazon ECR
+              id: login-ecr
+              uses: aws-actions/amazon-ecr-login@v2
+
+            - name: Build and push image
+              id: build
+              env:
+                  ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+                  ECR_REPOSITORY: ${{ inputs.ecr_repository }}
+                  IMAGE_TAG: ${{ inputs.image_tag }}
+                  SERVICE_NAME: ${{ inputs.service_name }}
+              run: |
+                  cd ${{ inputs.dockerfile_path }}
+
+                  echo "🔨 Building $SERVICE_NAME image..."
+                  echo "📝 Registry: $ECR_REGISTRY"
+                  echo "📝 Repository: $ECR_REPOSITORY"
+                  echo "📝 Tag: $IMAGE_TAG"
+
+                  # Build and tag image
+                  IMAGE_URI="$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
+                  docker build -t $IMAGE_URI .
+
+                  # Push image to ECR
+                  echo "🚀 Pushing image to ECR..."
+                  docker push $IMAGE_URI
+
+                  echo "✅ Image pushed successfully: $IMAGE_URI"
+                  echo "image_uri=$IMAGE_URI" >> $GITHUB_OUTPUT

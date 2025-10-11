@@ -1,0 +1,138 @@
+name: Release (Refactored)
+
+on:
+    release:
+        types: [published]
+
+jobs:
+    # Echo release information
+    info:
+        runs-on: ubuntu-latest
+        outputs:
+            release_tag: ${{ github.event.release.tag_name }}
+            frontend_tag: ${{ steps.tags.outputs.frontend_tag }}
+            backend_tag: ${{ steps.tags.outputs.backend_tag }}
+            should_build_frontend: ${{ steps.conditions.outputs.frontend }}
+            should_build_backend: ${{ steps.conditions.outputs.backend }}
+
+        steps:
+            - name: Echo release information
+              run: |
+                  echo "🚀 Release: ${{ github.event.release.tag_name }}"
+                  echo "📝 Name: ${{ github.event.release.name }}"
+                  echo "📝 Body: ${{ github.event.release.body }}"
+
+            - name: Determine build conditions and tags
+              id: conditions
+              env:
+                  RELEASE_TAG: ${{ github.event.release.tag_name }}
+              run: |
+                  # Determine what to build
+                  if [[ "$RELEASE_TAG" == frontend-* || "$RELEASE_TAG" == v* ]]; then
+                    echo "frontend=true" >> $GITHUB_OUTPUT
+                  else
+                    echo "frontend=false" >> $GITHUB_OUTPUT
+                  fi
+
+                  if [[ "$RELEASE_TAG" == backend-* || "$RELEASE_TAG" == v* ]]; then
+                    echo "backend=true" >> $GITHUB_OUTPUT
+                  else
+                    echo "backend=false" >> $GITHUB_OUTPUT
+                  fi
+
+            - name: Generate image tags
+              id: tags
+              env:
+                  RELEASE_TAG: ${{ github.event.release.tag_name }}
+              run: |
+                  # Generate frontend tag
+                  if [[ "$RELEASE_TAG" == v* ]]; then
+                    FRONTEND_TAG="frontend-$RELEASE_TAG"
+                  else
+                    FRONTEND_TAG="$RELEASE_TAG"
+                  fi
+                  echo "frontend_tag=$FRONTEND_TAG" >> $GITHUB_OUTPUT
+
+                  # Generate backend tag
+                  if [[ "$RELEASE_TAG" == v* ]]; then
+                    BACKEND_TAG="backend-$RELEASE_TAG"
+                  else
+                    BACKEND_TAG="$RELEASE_TAG"
+                  fi
+                  echo "backend_tag=$BACKEND_TAG" >> $GITHUB_OUTPUT
+
+                  echo "🏷️ Frontend tag: $FRONTEND_TAG"
+                  echo "🏷️ Backend tag: $BACKEND_TAG"
+
+    # Build frontend image
+    build-frontend:
+        if: needs.info.outputs.should_build_frontend == 'true'
+        needs: info
+        uses: ./.github/workflows/build-image.yaml
+        with:
+            service_name: "frontend"
+            dockerfile_path: "client"
+            image_tag: ${{ needs.info.outputs.frontend_tag }}
+            ecr_repository: "chatapp-server"
+        secrets:
+            AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+            AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+            AWS_REGION: ${{ secrets.AWS_REGION }}
+
+    # Build backend image
+    build-backend:
+        if: needs.info.outputs.should_build_backend == 'true'
+        needs: info
+        uses: ./.github/workflows/build-image.yaml
+        with:
+            service_name: "backend"
+            dockerfile_path: "server"
+            image_tag: ${{ needs.info.outputs.backend_tag }}
+            ecr_repository: "chatapp-server"
+        secrets:
+            AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+            AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+            AWS_REGION: ${{ secrets.AWS_REGION }}
+
+    # Setup ECR authentication
+    setup-ecr-auth:
+        if: needs.info.outputs.should_build_frontend == 'true' || needs.info.outputs.should_build_backend == 'true'
+        needs: info
+        uses: ./.github/workflows/setup-ecr-auth.yaml
+        with:
+            namespace: "app-ns"
+        secrets:
+            DIGITALOCEAN_ACCESS_TOKEN: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
+            DO_CLUSTER_ID: ${{ secrets.DO_CLUSTER_ID }}
+            ECR_REGISTRY: ${{ secrets.ECR_REGISTRY }}
+            AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+            AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+            AWS_REGION: ${{ secrets.AWS_REGION }}
+
+    # Deploy frontend
+    deploy-frontend:
+        if: needs.info.outputs.should_build_frontend == 'true'
+        needs: [info, build-frontend, setup-ecr-auth]
+        uses: ./.github/workflows/k8s-deploy.yaml
+        with:
+            service_name: "nextjs-app"
+            namespace: "app-ns"
+            image_uri: ${{ needs.build-frontend.outputs.image_uri }}
+            timeout: "600s"
+        secrets:
+            DIGITALOCEAN_ACCESS_TOKEN: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
+            DO_CLUSTER_ID: ${{ secrets.DO_CLUSTER_ID }}
+
+    # Deploy backend
+    deploy-backend:
+        if: needs.info.outputs.should_build_backend == 'true'
+        needs: [info, build-backend, setup-ecr-auth]
+        uses: ./.github/workflows/k8s-deploy.yaml
+        with:
+            service_name: "backend"
+            namespace: "app-ns"
+            image_uri: ${{ needs.build-backend.outputs.image_uri }}
+            timeout: "600s"
+        secrets:
+            DIGITALOCEAN_ACCESS_TOKEN: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
+            DO_CLUSTER_ID: ${{ secrets.DO_CLUSTER_ID }}

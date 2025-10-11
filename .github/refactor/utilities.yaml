@@ -1,0 +1,119 @@
+name: Utilities
+
+on:
+    workflow_dispatch:
+        inputs:
+            action:
+                description: "Action to perform"
+                required: true
+                default: "clean-ecr"
+                type: choice
+                options:
+                    - clean-ecr
+                    - restart-deployments
+                    - show-cluster-status
+            namespace:
+                description: "Kubernetes namespace"
+                required: false
+                default: "app-ns"
+                type: string
+
+jobs:
+    utilities:
+        runs-on: ubuntu-latest
+
+        steps:
+            - name: Install doctl
+              if: contains(fromJson('["restart-deployments", "show-cluster-status"]'), github.event.inputs.action)
+              uses: digitalocean/action-doctl@v2
+              with:
+                  token: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
+
+            - name: Configure kubectl
+              if: contains(fromJson('["restart-deployments", "show-cluster-status"]'), github.event.inputs.action)
+              run: |
+                  doctl kubernetes cluster kubeconfig save ${{ secrets.DO_CLUSTER_ID }}
+
+            - name: Configure AWS credentials
+              if: github.event.inputs.action == 'clean-ecr'
+              uses: aws-actions/configure-aws-credentials@v4
+              with:
+                  aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+                  aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+                  aws-region: ${{ secrets.AWS_REGION }}
+
+            - name: Clean ECR images
+              if: github.event.inputs.action == 'clean-ecr'
+              run: |
+                  echo "🧹 Cleaning old ECR images..."
+
+                  # Keep only latest 10 images
+                  REPOSITORY="chatapp-server"
+
+                  echo "📋 Current images in $REPOSITORY:"
+                  aws ecr describe-images --repository-name $REPOSITORY --query 'imageDetails[*].[imageTags[0],imageDigest]' --output table
+
+                  # Get image digests to delete (keep latest 10)
+                  IMAGES_TO_DELETE=$(aws ecr describe-images --repository-name $REPOSITORY \
+                    --query 'sort_by(imageDetails,&imagePushedAt)[:-10][*].imageDigest' --output text)
+
+                  if [ -n "$IMAGES_TO_DELETE" ]; then
+                    echo "🗑️ Deleting old images..."
+                    for digest in $IMAGES_TO_DELETE; do
+                      aws ecr batch-delete-image --repository-name $REPOSITORY --image-ids imageDigest=$digest
+                    done
+                    echo "✅ Cleanup completed"
+                  else
+                    echo "✅ No images to delete"
+                  fi
+
+            - name: Restart deployments
+              if: github.event.inputs.action == 'restart-deployments'
+              env:
+                  NAMESPACE: ${{ github.event.inputs.namespace }}
+              run: |
+                  echo "🔄 Restarting deployments in namespace: $NAMESPACE"
+
+                  # Restart all deployments
+                  kubectl rollout restart deployment -n $NAMESPACE
+
+                  echo "⏳ Waiting for rollouts to complete..."
+                  kubectl rollout status deployment --all -n $NAMESPACE --timeout=300s
+
+                  echo "✅ All deployments restarted successfully"
+
+            - name: Show cluster status
+              if: github.event.inputs.action == 'show-cluster-status'
+              env:
+                  NAMESPACE: ${{ github.event.inputs.namespace }}
+              run: |
+                  echo "📊 Cluster Status Report"
+                  echo "======================="
+
+                  echo ""
+                  echo "🏷️ Namespace: $NAMESPACE"
+                  kubectl get namespace $NAMESPACE
+
+                  echo ""
+                  echo "📋 Deployments:"
+                  kubectl get deployments -n $NAMESPACE -o wide
+
+                  echo ""
+                  echo "📋 Pods:"
+                  kubectl get pods -n $NAMESPACE -o wide
+
+                  echo ""
+                  echo "📋 Services:"
+                  kubectl get services -n $NAMESPACE
+
+                  echo ""
+                  echo "📋 Secrets:"
+                  kubectl get secrets -n $NAMESPACE
+
+                  echo ""
+                  echo "📋 Recent Events:"
+                  kubectl get events -n $NAMESPACE --sort-by=.metadata.creationTimestamp | tail -10
+
+                  echo ""
+                  echo "📊 Resource Usage:"
+                  kubectl top pods -n $NAMESPACE --no-headers 2>/dev/null || echo "Metrics not available"

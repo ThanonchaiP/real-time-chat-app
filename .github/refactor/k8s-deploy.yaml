@@ -1,0 +1,136 @@
+name: Deploy to Kubernetes
+
+on:
+    workflow_call:
+        inputs:
+            service_name:
+                required: true
+                type: string
+                description: "Service name for deployment"
+            namespace:
+                required: true
+                type: string
+                description: "Kubernetes namespace"
+            image_uri:
+                required: true
+                type: string
+                description: "Full Docker image URI"
+            timeout:
+                required: false
+                type: string
+                default: "600s"
+                description: "Deployment timeout"
+        secrets:
+            DIGITALOCEAN_ACCESS_TOKEN:
+                required: true
+            DO_CLUSTER_ID:
+                required: true
+
+jobs:
+    deploy:
+        runs-on: ubuntu-latest
+
+        steps:
+            - name: Install doctl
+              uses: digitalocean/action-doctl@v2
+              with:
+                  token: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
+
+            - name: Configure kubectl for DigitalOcean
+              run: |
+                  doctl kubernetes cluster kubeconfig save ${{ secrets.DO_CLUSTER_ID }}
+
+            - name: Update deployment
+              env:
+                  SERVICE_NAME: ${{ inputs.service_name }}
+                  NAMESPACE: ${{ inputs.namespace }}
+                  IMAGE_URI: ${{ inputs.image_uri }}
+                  TIMEOUT: ${{ inputs.timeout }}
+              run: |
+                  echo "🔄 Deploying $SERVICE_NAME to namespace: $NAMESPACE"
+                  echo "📝 Image: $IMAGE_URI"
+
+                  # Check current status
+                  echo "📋 Current deployment status:"
+                  kubectl get deployment $SERVICE_NAME -n $NAMESPACE || echo "Deployment not found"
+                  kubectl get pods -n $NAMESPACE -l app=$SERVICE_NAME || echo "No pods found"
+
+                  # Update deployment image
+                  kubectl set image deployment/$SERVICE_NAME $SERVICE_NAME=$IMAGE_URI -n $NAMESPACE
+
+                  # Patch deployment to use imagePullSecret
+                  echo "🔑 Ensuring imagePullSecret is configured..."
+                  kubectl patch deployment $SERVICE_NAME -n $NAMESPACE -p '{
+                    "spec": {
+                      "template": {
+                        "spec": {
+                          "imagePullSecrets": [
+                            {
+                              "name": "ecr-registry-secret"
+                            }
+                          ]
+                        }
+                      }
+                    }
+                  }'
+
+                  # Restart rollout
+                  kubectl rollout restart deployment/$SERVICE_NAME -n $NAMESPACE
+
+                  # Wait for rollout completion
+                  echo "⏳ Waiting for rollout to complete (timeout: $TIMEOUT)..."
+                  kubectl rollout status deployment/$SERVICE_NAME -n $NAMESPACE --timeout=$TIMEOUT || {
+                    echo "❌ Rollout failed or timed out!"
+                    
+                    echo "📋 Deployment details:"
+                    kubectl describe deployment $SERVICE_NAME -n $NAMESPACE
+                    
+                    echo "📋 Pod status:"
+                    kubectl get pods -n $NAMESPACE -l app=$SERVICE_NAME -o wide
+                    
+                    echo "📋 Recent events:"
+                    kubectl get events -n $NAMESPACE --sort-by=.metadata.creationTimestamp | tail -20
+                    
+                    echo "📋 Pod logs (failed pods):"
+                    kubectl get pods -n $NAMESPACE -l app=$SERVICE_NAME --field-selector=status.phase!=Running -o name | head -3 | \
+                      xargs -I {} kubectl logs {} -n $NAMESPACE --tail=50 || true
+                    
+                    exit 1
+                  }
+
+                  echo "✅ Deployment completed successfully!"
+
+            - name: Verify deployment
+              env:
+                  SERVICE_NAME: ${{ inputs.service_name }}
+                  NAMESPACE: ${{ inputs.namespace }}
+                  TIMEOUT: ${{ inputs.timeout }}
+              run: |
+                  echo "🔍 Running deployment verification..."
+
+                  # Wait for deployment to be available
+                  kubectl wait --for=condition=available --timeout=$TIMEOUT deployment/$SERVICE_NAME -n $NAMESPACE || {
+                    echo "❌ Deployment not ready!"
+                    kubectl get deployment $SERVICE_NAME -n $NAMESPACE
+                    exit 1
+                  }
+
+                  # Get final status
+                  echo "📋 Final deployment status:"
+                  kubectl get deployment $SERVICE_NAME -n $NAMESPACE
+
+                  echo "📋 Final pod status:"
+                  kubectl get pods -n $NAMESPACE -l app=$SERVICE_NAME -o wide
+
+                  # Count running pods
+                  RUNNING_PODS=$(kubectl get pods -n $NAMESPACE -l app=$SERVICE_NAME --field-selector=status.phase=Running --no-headers | wc -l)
+                  TOTAL_PODS=$(kubectl get pods -n $NAMESPACE -l app=$SERVICE_NAME --no-headers | wc -l)
+
+                  echo "📊 Pods summary: $RUNNING_PODS/$TOTAL_PODS running"
+
+                  if [ "$RUNNING_PODS" -eq "$TOTAL_PODS" ]; then
+                    echo "✅ All pods are running successfully!"
+                  else
+                    echo "⚠️ Some pods are not running properly"
+                    exit 1
+                  fi

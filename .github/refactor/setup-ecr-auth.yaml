@@ -1,0 +1,64 @@
+name: Setup ECR Authentication
+
+on:
+    workflow_call:
+        inputs:
+            namespace:
+                required: true
+                type: string
+                description: "Kubernetes namespace"
+        secrets:
+            DIGITALOCEAN_ACCESS_TOKEN:
+                required: true
+            DO_CLUSTER_ID:
+                required: true
+            ECR_REGISTRY:
+                required: true
+            AWS_ACCESS_KEY_ID:
+                required: true
+            AWS_SECRET_ACCESS_KEY:
+                required: true
+            AWS_REGION:
+                required: true
+
+jobs:
+    setup-auth:
+        runs-on: ubuntu-latest
+
+        steps:
+            - name: Install doctl
+              uses: digitalocean/action-doctl@v2
+              with:
+                  token: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
+
+            - name: Configure kubectl for DigitalOcean
+              run: |
+                  doctl kubernetes cluster kubeconfig save ${{ secrets.DO_CLUSTER_ID }}
+
+            - name: Configure AWS credentials
+              uses: aws-actions/configure-aws-credentials@v4
+              with:
+                  aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+                  aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+                  aws-region: ${{ secrets.AWS_REGION }}
+
+            - name: Create ECR image pull secret
+              env:
+                  NAMESPACE: ${{ inputs.namespace }}
+                  ECR_REGISTRY: ${{ secrets.ECR_REGISTRY }}
+                  AWS_DEFAULT_REGION: ${{ secrets.AWS_REGION }}
+              run: |
+                  echo "🔑 Creating ECR image pull secret for namespace: $NAMESPACE"
+
+                  # Get ECR token
+                  ECR_TOKEN=$(aws ecr get-login-password --region $AWS_DEFAULT_REGION)
+
+                  # Create or update secret
+                  kubectl delete secret ecr-registry-secret -n $NAMESPACE --ignore-not-found=true
+                  kubectl create secret docker-registry ecr-registry-secret \
+                    --docker-server=$ECR_REGISTRY \
+                    --docker-username=AWS \
+                    --docker-password="$ECR_TOKEN" \
+                    -n $NAMESPACE
+
+                  echo "✅ ECR secret created successfully in namespace: $NAMESPACE"
